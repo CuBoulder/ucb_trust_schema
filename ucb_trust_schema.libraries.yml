@@ -1,0 +1,6 @@
+trust-syndication:
+  version: 1.x
+  js:
+    js/trust-syndication.js: {}
+  dependencies:
+    - core/drupal 

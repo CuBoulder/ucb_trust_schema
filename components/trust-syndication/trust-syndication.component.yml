@@ -1,0 +1,37 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+name: Trust Syndication
+description: Component for managing trust metadata syndication
+props:
+  type: object
+  required:
+    - nodeId
+  properties:
+    nodeId:
+      type: string
+      title: Node ID
+      description: The ID of the node to syndicate
+    trustRole:
+      type: string
+      title: Trust Role
+      enum:
+        - primary_source
+        - secondary_source
+        - subject_matter_contributor
+        - unverified
+    trustScope:
+      type: string
+      title: Trust Scope
+      enum:
+        - department_level
+        - college_level
+        - campus_wide
+    trustContact:
+      type: string
+      title: Maintainer Contact
+      description: Contact information for the content maintainer
+    trustTopics:
+      type: array
+      title: Trust Topics
+      items:
+        type: string
+      description: Academic topics this content relates to 

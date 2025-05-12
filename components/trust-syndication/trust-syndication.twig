@@ -1,0 +1,22 @@
+{#
+/**
+ * @file
+ * Default theme implementation for the trust syndication component.
+ *
+ * Available variables:
+ * - node_id: The ID of the node.
+ * - trust_role: The trust role value.
+ * - trust_scope: The trust scope value.
+ * - trust_contact: The maintainer contact information.
+ * - trust_topics: Array of trust topics.
+ */
+#}
+<div{{ attributes.addClass('trust-syndication') }}>
+  <trust-syndication
+    node-id="{{ node_id }}"
+    trust-role="{{ trust_role }}"
+    trust-scope="{{ trust_scope }}"
+    trust-contact="{{ trust_contact }}"
+    trust-topics="{{ trust_topics|json_encode }}"
+  ></trust-syndication>
+</div> 

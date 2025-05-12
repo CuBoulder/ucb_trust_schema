@@ -1,0 +1,140 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the UCB Trust Schema module.
+ */
+
+use Drupal\Core\Database\Database;
+
+/**
+ * Implements hook_install().
+ */
+function ucb_trust_schema_install() {
+  // Create the trust metadata table
+  $schema = [
+    'description' => 'Stores trust metadata for nodes',
+    'fields' => [
+      'nid' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'The node ID',
+      ],
+      'trust_role' => [
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The trust role of the content',
+      ],
+      'trust_scope' => [
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The scope of the content',
+      ],
+      'trust_contact' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'default' => '',
+        'description' => 'Contact information for the content maintainer',
+      ],
+      'trust_topics' => [
+        'type' => 'text',
+        'not null' => FALSE,
+        'description' => 'JSON encoded array of trust topics',
+      ],
+      'trust_syndication_enabled' => [
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Whether trust syndication is enabled',
+      ],
+      'created' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The Unix timestamp when the record was created',
+      ],
+      'changed' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The Unix timestamp when the record was last updated',
+      ],
+    ],
+    'primary key' => ['nid'],
+    'indexes' => [
+      'trust_role' => ['trust_role'],
+      'trust_scope' => ['trust_scope'],
+      'trust_syndication_enabled' => ['trust_syndication_enabled'],
+    ],
+  ];
+
+  Database::getConnection()->schema()->createTable('trust_metadata', $schema);
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function ucb_trust_schema_uninstall() {
+  // Remove the trust metadata table
+  Database::getConnection()->schema()->dropTable('trust_metadata');
+}
+
+/**
+ * Update to convert existing fields to table storage.
+ */
+function ucb_trust_schema_update_9001() {
+  $old_fields = [
+    'trust_role',
+    'trust_scope',
+    'trust_contact',
+    'trust_topics',
+    'trust_syndication_enabled'
+  ];
+
+  // Migrate data from old fields to new table
+  $query = \Drupal::entityQuery('node')
+    ->condition('type', 'article')
+    ->accessCheck(FALSE);
+  $nids = $query->execute();
+
+  foreach ($nids as $nid) {
+    $node = \Drupal\node\Entity\Node::load($nid);
+    if (!$node) {
+      continue;
+    }
+
+    $trust_metadata = [
+      'nid' => $nid,
+      'trust_role' => '',
+      'trust_scope' => '',
+      'trust_contact' => '',
+      'trust_topics' => '[]',
+      'trust_syndication_enabled' => 0,
+      'created' => \Drupal::time()->getRequestTime(),
+      'changed' => \Drupal::time()->getRequestTime(),
+    ];
+
+    foreach ($old_fields as $field_name) {
+      if ($node->hasField($field_name) && !$node->get($field_name)->isEmpty()) {
+        if ($field_name === 'trust_topics') {
+          $trust_metadata[$field_name] = json_encode($node->get($field_name)->getValue());
+        }
+        else {
+          $trust_metadata[$field_name] = $node->get($field_name)->value;
+        }
+      }
+    }
+
+    \Drupal::database()->merge('trust_metadata')
+      ->key(['nid' => $nid])
+      ->fields($trust_metadata)
+      ->execute();
+  }
+} 

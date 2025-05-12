@@ -1,0 +1,23 @@
+services:
+  ucb_trust_schema.operations:
+    class: Drupal\ucb_trust_schema\Service\TrustSchemaOperations
+    arguments: []
+  ucb_trust_schema.route_subscriber:
+    class: Drupal\ucb_trust_schema\EventSubscriber\TrustSyndicationRouteSubscriber
+    tags:
+      - { name: event_subscriber }
+  ucb_trust_schema.jsonapi:
+    class: Drupal\ucb_trust_schema\Service\TrustSchemaJsonApiService
+    arguments: ['@logger.factory']
+  ucb_trust_schema.resource_type_provider:
+    class: Drupal\ucb_trust_schema\Service\TrustSchemaResourceTypeProvider
+    arguments: ['@entity_type.manager', '@jsonapi.resource_type.repository', '@ucb_trust_schema.trust_topics_field_accessor', '@logger.factory']
+    tags:
+      - { name: jsonapi_resource_type_provider, priority: 100 }
+  ucb_trust_schema.trust_metadata_normalizer:
+    class: Drupal\ucb_trust_schema\Normalizer\TrustMetadataNormalizer
+    tags:
+      - { name: normalizer, priority: 30 }
+  ucb_trust_schema.trust_topics_field_accessor:
+    class: Drupal\ucb_trust_schema\Field\TrustTopicsFieldAccessor
+    arguments: ['@entity_type.manager'] 

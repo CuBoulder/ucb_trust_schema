@@ -1,0 +1,10 @@
+name: UCB Trust Schema
+type: module
+description: 'Enables individual Drupal sites to declare and expose trust metadata on selected content nodes.'
+package: Custom
+core_version_requirement: ^10 || ^11
+dependencies:
+  - drupal:node
+  - drupal:jsonapi
+  - drupal:field
+  - drupal:taxonomy 

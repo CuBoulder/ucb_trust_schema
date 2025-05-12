@@ -1,0 +1,13 @@
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: 1234567890
+resources:
+  node--article:
+    fields:
+      trust_metadata:
+        fieldName: trust_metadata
+        publicName: trust_metadata
+        enabled: true
+        fieldType: json 

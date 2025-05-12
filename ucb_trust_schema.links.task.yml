@@ -1,0 +1,4 @@
+ucb_trust_schema.settings:
+  title: 'Trust Schema'
+  route_name: ucb_trust_schema.settings
+  base_route: system.admin_config 

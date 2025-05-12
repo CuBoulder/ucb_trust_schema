@@ -1,0 +1,13 @@
+ucb_trust_schema.overview:
+  title: 'Trust Syndication Overview'
+  description: 'Manage trust metadata for content'
+  parent: system.admin_content
+  route_name: ucb_trust_schema.overview
+  weight: 10
+
+ucb_trust_schema.settings:
+  title: 'Trust Schema'
+  description: 'Configure trust schema settings'
+  parent: system.admin_config_cu_boulder
+  route_name: ucb_trust_schema.settings
+  weight: 0 
