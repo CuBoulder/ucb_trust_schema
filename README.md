@@ -1,6 +1,6 @@
 # Trust Schema Module
 
-The Trust Schema Module enables individual Drupal sites to declare and expose trust metadata on selected content nodes. This metadata helps establish the credibility and context of content when it's syndicated across different platforms.
+The Trust Schema Module enables individual Drupal sites to declare and expose trust metadata on selected content nodes. This metadata helps establish the credibility and context of content when it's syndicated across different sites.
 
 ## Features
 
@@ -40,34 +40,11 @@ The Trust Schema Module enables individual Drupal sites to declare and expose tr
 
 ### Accessing Trust Metadata via JSON:API
 
-Trust metadata is exposed through the JSON:API endpoints. Here are the main ways to access the data:
+Trust metadata is exposed through the JSON:API endpoints. 
 
-1. **Get trust metadata for a specific node:**
-   ```bash
-   curl -H "Accept: application/vnd.api+json" https://your-site.com/jsonapi/node/basic_page/{node-id}?include=field_trust_topics
-   ```
+Here is the easiest way to just view all syndicated nodes
 
-2. **Get trust metadata for all nodes:**
-   ```bash
-   curl -H "Accept: application/vnd.api+json" https://your-site.com/jsonapi/node/basic_page?include=field_trust_topics
-   ```
-
-3. **Get only syndicated nodes:**
-   ```bash
-   curl -H "Accept: application/vnd.api+json" https://your-site.com/trust-syndication/list
-   ```
-
-4. **Filter nodes by trust metadata:**
-   ```bash
-   # Filter by trust role
-   curl -H "Accept: application/vnd.api+json" https://your-site.com/jsonapi/node/basic_page?filter[trust_role]=primary_source&include=field_trust_topics
-
-   # Filter by trust scope
-   curl -H "Accept: application/vnd.api+json" https://your-site.com/jsonapi/node/basic_page?filter[trust_scope]=department_level&include=field_trust_topics
-
-   # Filter by trust topics
-   curl -H "Accept: application/vnd.api+json" https://your-site.com/jsonapi/node/basic_page?filter[trust_topics]=Science&include=field_trust_topics
-   ```
+`/api/trust-schema/syndicated-nodes`
 
 The response will include trust metadata in this format:
 ```json
