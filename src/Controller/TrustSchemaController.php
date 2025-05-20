@@ -236,6 +236,7 @@ class TrustSchemaController extends ControllerBase {
       // Update trust metadata in the custom table
       $record = [
         'nid' => $node->id(),
+        'uuid' => $node->uuid(),
         'trust_role' => $content['trust_role'],
         'trust_scope' => $content['trust_scope'],
         'trust_contact' => $content['trust_contact'],

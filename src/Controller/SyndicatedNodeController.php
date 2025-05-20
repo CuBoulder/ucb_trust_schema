@@ -119,6 +119,7 @@ class SyndicatedNodeController extends ControllerBase {
         $data[] = [
           'id' => $node->id(),
           'type' => $node->bundle(),
+          'uuid' => $node->uuid(),
           'attributes' => [
             'title' => $node->getTitle(),
             'url' => $url,

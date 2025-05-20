@@ -21,6 +21,12 @@ function ucb_trust_schema_install() {
         'not null' => TRUE,
         'description' => 'The node ID',
       ],
+      'uuid' => [
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'description' => 'The unique identifier for the trust metadata',
+      ],
       'trust_role' => [
         'type' => 'varchar',
         'length' => 32,
@@ -69,6 +75,7 @@ function ucb_trust_schema_install() {
     ],
     'primary key' => ['nid'],
     'indexes' => [
+      'uuid' => ['uuid'],
       'trust_role' => ['trust_role'],
       'trust_scope' => ['trust_scope'],
       'trust_syndication_enabled' => ['trust_syndication_enabled'],
@@ -112,6 +119,7 @@ function ucb_trust_schema_update_9001() {
 
     $trust_metadata = [
       'nid' => $nid,
+      'uuid' => \Drupal::service('uuid')->generate(),
       'trust_role' => '',
       'trust_scope' => '',
       'trust_contact' => '',

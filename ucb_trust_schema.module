@@ -136,6 +136,7 @@ function ucb_trust_schema_update_trust_metadata($nid, array $metadata) {
   // Prepare the data for saving, preserving existing values if not provided
   $data = [
     'nid' => $nid,
+    'uuid' => \Drupal::entityTypeManager()->getStorage('node')->load($nid)->uuid(),
     'trust_role' => $metadata['trust_role'] ?? $existing['trust_role'],
     'trust_scope' => $metadata['trust_scope'] ?? $existing['trust_scope'],
     'trust_contact' => $metadata['trust_contact'] ?? $existing['trust_contact'],
