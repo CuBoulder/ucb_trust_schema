@@ -156,56 +156,92 @@ class TrustSchemaController extends ControllerBase {
    *   The JSON response.
    */
   public function view(NodeInterface $node) {
-    $query = \Drupal::database()->select('trust_metadata', 'tm')
-      ->fields('tm')
-      ->condition('nid', $node->id())
-      ->execute();
-    
-    $record = $query->fetchAssoc();
-    
-    if (!$record) {
-      // If no record exists, create a default one
-      $record = [
-        'nid' => $node->id(),
-        'trust_role' => '',
-        'trust_scope' => '',
-        'trust_contact' => '',
-        'trust_topics' => '[]',
-        'trust_syndication_enabled' => 0,
-      ];
-    }
-
-    // Parse trust topics from JSON and load term names
-    $trust_topics = json_decode($record['trust_topics'], TRUE) ?: [];
-    $term_names = [];
-    
-    if (!empty($trust_topics)) {
-      // Convert string IDs to integers
-      $term_ids = array_map('intval', $trust_topics);
+    try {
+      $query = \Drupal::database()->select('trust_metadata', 'tm')
+        ->fields('tm')
+        ->condition('nid', $node->id())
+        ->execute();
       
-      $terms = \Drupal::entityTypeManager()
-        ->getStorage('taxonomy_term')
-        ->loadMultiple($term_ids);
+      $record = $query->fetchAssoc();
       
-      foreach ($terms as $term) {
-        $term_names[] = $term->getName();
+      if (!$record) {
+        // If no record exists, create a default one
+        $record = [
+          'nid' => $node->id(),
+          'trust_role' => '',
+          'trust_scope' => '',
+          'trust_contact' => '',
+          'trust_topics' => '[]',
+          'trust_syndication_enabled' => 0,
+        ];
       }
+
+      // Parse trust topics from JSON and load term names
+      $trust_topics = json_decode($record['trust_topics'], TRUE) ?: [];
+      $term_names = [];
+      
+      if (!empty($trust_topics)) {
+        // Convert string IDs to integers
+        $term_ids = array_map('intval', $trust_topics);
+        
+        $terms = \Drupal::entityTypeManager()
+          ->getStorage('taxonomy_term')
+          ->loadMultiple($term_ids);
+        
+        foreach ($terms as $term) {
+          $term_names[] = $term->getName();
+        }
+      }
+
+      // Get the summary based on content type
+      $summary = '';
+      if ($node->hasField('body')) {
+        $body = $node->get('body')->first();
+        if ($body && !$body->isEmpty()) {
+          $summary = $body->summary ?: $body->value;
+        }
+      }
+      
+      // Check for article summary field
+      if (empty($summary) && $node->hasField('field_ucb_article_summary')) {
+        $article_summary = $node->get('field_ucb_article_summary')->first();
+        if ($article_summary && !$article_summary->isEmpty()) {
+          $summary = $article_summary->value;
+        }
+      }
+      
+      // Check for generic summary field
+      if (empty($summary) && $node->hasField('field_summary')) {
+        $generic_summary = $node->get('field_summary')->first();
+        if ($generic_summary && !$generic_summary->isEmpty()) {
+          $summary = $generic_summary->value;
+        }
+      }
+
+      $trust_metadata = [
+        'node_id' => $node->id(),
+        'uuid' => $node->uuid(),
+        'trust_role' => $record['trust_role'],
+        'trust_scope' => $record['trust_scope'],
+        'trust_contact' => $record['trust_contact'],
+        'trust_topics' => $term_names,
+        'trust_syndication_enabled' => (bool) $record['trust_syndication_enabled'],
+        'node_summary' => $summary,
+      ];
+
+      return new JsonResponse([
+        'success' => TRUE,
+        'data' => $trust_metadata,
+      ]);
     }
-
-    $trust_metadata = [
-      'node_id' => $node->id(),
-      'trust_role' => $record['trust_role'],
-      'trust_scope' => $record['trust_scope'],
-      'trust_contact' => $record['trust_contact'],
-      'trust_topics' => $term_names,
-      'trust_syndication_enabled' => (bool) $record['trust_syndication_enabled'],
-      'node_summary' => $node->get('body')->summary,
-    ];
-
-    return new JsonResponse([
-      'success' => TRUE,
-      'data' => $trust_metadata,
-    ]);
+    catch (\Exception $e) {
+      \Drupal::logger('ucb_trust_schema')->error('Error in view method: @error', ['@error' => $e->getMessage()]);
+      return new JsonResponse([
+        'success' => FALSE,
+        'message' => 'An error occurred while fetching trust metadata.',
+        'error' => $e->getMessage(),
+      ], 500);
+    }
   }
 
   /**
@@ -224,12 +260,15 @@ class TrustSchemaController extends ControllerBase {
       throw new AccessDeniedHttpException();
     }
 
-    $content = json_decode($request->getContent(), TRUE);
-    if (!$content) {
-      return new JsonResponse(['error' => 'Invalid JSON'], 400);
-    }
-
     try {
+      $content = json_decode($request->getContent(), TRUE);
+      if (!$content) {
+        return new JsonResponse([
+          'success' => FALSE,
+          'message' => 'Invalid JSON data'
+        ], 400);
+      }
+
       // Convert trust topics to integers
       $trust_topics = array_map('intval', $content['trust_topics']);
 
@@ -245,10 +284,46 @@ class TrustSchemaController extends ControllerBase {
         'changed' => \Drupal::time()->getRequestTime(),
       ];
 
+      // Check if record exists to determine if we need to set created timestamp
+      $exists = \Drupal::database()->select('trust_metadata', 'tm')
+        ->condition('nid', $node->id())
+        ->countQuery()
+        ->execute()
+        ->fetchField();
+
+      if (!$exists) {
+        $record['created'] = $record['changed'];
+      }
+
       \Drupal::database()->merge('trust_metadata')
         ->key(['nid' => $node->id()])
         ->fields($record)
         ->execute();
+
+      // Get the summary based on content type
+      $summary = '';
+      if ($node->hasField('body')) {
+        $body = $node->get('body')->first();
+        if ($body && !$body->isEmpty()) {
+          $summary = $body->summary ?: $body->value;
+        }
+      }
+      
+      // Check for article summary field
+      if (empty($summary) && $node->hasField('field_ucb_article_summary')) {
+        $article_summary = $node->get('field_ucb_article_summary')->first();
+        if ($article_summary && !$article_summary->isEmpty()) {
+          $summary = $article_summary->value;
+        }
+      }
+      
+      // Check for generic summary field
+      if (empty($summary) && $node->hasField('field_summary')) {
+        $generic_summary = $node->get('field_summary')->first();
+        if ($generic_summary && !$generic_summary->isEmpty()) {
+          $summary = $generic_summary->value;
+        }
+      }
 
       // Load term names for the response
       $term_names = [];
@@ -266,19 +341,22 @@ class TrustSchemaController extends ControllerBase {
         'success' => TRUE,
         'data' => [
           'node_id' => $node->id(),
+          'uuid' => $node->uuid(),
           'trust_role' => $content['trust_role'],
           'trust_scope' => $content['trust_scope'],
           'trust_contact' => $content['trust_contact'],
           'trust_topics' => $term_names,
           'trust_syndication_enabled' => (bool) $content['trust_syndication_enabled'],
-          'node_summary' => $node->get('body')->summary,
+          'node_summary' => $summary,
         ],
       ]);
     }
     catch (\Exception $e) {
+      \Drupal::logger('ucb_trust_schema')->error('Error saving trust metadata: @error', ['@error' => $e->getMessage()]);
       return new JsonResponse([
         'success' => FALSE,
-        'message' => $e->getMessage(),
+        'message' => 'Failed to save trust metadata',
+        'error' => $e->getMessage(),
       ], 500);
     }
   }

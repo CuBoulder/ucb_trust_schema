@@ -116,6 +116,38 @@ class SyndicatedNodeController extends ControllerBase {
           }
         }
         
+        // Check for article summary field
+        if (empty($summary) && $node->hasField('field_ucb_article_summary')) {
+          $article_summary = $node->get('field_ucb_article_summary')->first();
+          if ($article_summary && !$article_summary->isEmpty()) {
+            $summary = $article_summary->value;
+          }
+        }
+        
+        // Check for generic summary field
+        if (empty($summary) && $node->hasField('field_summary')) {
+          $generic_summary = $node->get('field_summary')->first();
+          if ($generic_summary && !$generic_summary->isEmpty()) {
+            $summary = $generic_summary->value;
+          }
+        }
+        
+        // For person pages, try to get a description or bio
+        if (empty($summary) && $node->bundle() === 'person') {
+          if ($node->hasField('field_ucb_person_bio')) {
+            $bio = $node->get('field_ucb_person_bio')->first();
+            if ($bio && !$bio->isEmpty()) {
+              $summary = $bio->summary ?: $bio->value;
+            }
+          }
+          elseif ($node->hasField('field_ucb_person_description')) {
+            $description = $node->get('field_ucb_person_description')->first();
+            if ($description && !$description->isEmpty()) {
+              $summary = $description->value;
+            }
+          }
+        }
+        
         $data[] = [
           'id' => $node->id(),
           'type' => $node->bundle(),
