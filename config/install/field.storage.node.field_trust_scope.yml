@@ -1,0 +1,27 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - options
+id: node.field_trust_scope
+field_name: field_trust_scope
+entity_type: node
+type: list_string
+settings:
+  allowed_values:
+    - value: department_level
+      label: 'Department-level'
+    - value: college_level
+      label: 'College-level'
+    - value: administrative_unit
+      label: 'Administrative-unit'
+    - value: campus_wide
+      label: 'Campus-wide'
+module: options
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false 

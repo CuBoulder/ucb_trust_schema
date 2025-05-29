@@ -1,19 +1,15 @@
-# Trust Schema Module
+# UCB Trust Schema Module
 
-The Trust Schema Module enables individual Drupal sites to declare and expose trust metadata on selected content nodes. This metadata helps establish the credibility and context of content when it's syndicated across different sites.
+A Drupal module that enables individual Drupal sites to declare and expose trust metadata on selected content nodes.
 
 ## Features
 
-- Trust metadata fields for content nodes:
-  - Trust Role (e.g., primary source, secondary source)
-  - Trust Scope (e.g., department level, university level)
-  - Trust Contact (email for verification)
-  - Trust Topics (taxonomy terms categorizing the content)
-  - Trust Syndication Enabled (toggle for syndication)
-
-- JSON:API integration for exposing trust metadata
-- Custom form for managing trust metadata on nodes
-- Trust Topics taxonomy vocabulary for categorizing content
+- Adds trust metadata fields to nodes:
+  - Trust Role (Primary Source, Secondary Source, Subject Matter Contributor/Expert, Unverified)
+  - Trust Scope (Department-level, College-level, Administrative-unit, Campus-wide)
+  - Trust Contact (Contact information for content maintainer)
+  - Trust Topics (Taxonomy terms for categorizing content)
+  - Trust Syndication Enabled (Toggle for syndication)
 
 ## Installation
 
@@ -22,74 +18,76 @@ The Trust Schema Module enables individual Drupal sites to declare and expose tr
    ```bash
    drush en ucb_trust_schema
    ```
-3. The module will automatically create the necessary database table and taxonomy vocabulary
+3. The module will automatically:
+   - Create the necessary fields on nodes
+   - Set up default trust topics
+   - Migrate any existing trust metadata
 
 ## Usage
 
 ### Managing Trust Metadata
 
-1. Navigate to any content node
-2. Click the "Trust Syndication" tab
-3. Fill in the trust metadata fields:
-   - Select a Trust Role
-   - Choose a Trust Scope
-   - Enter a Trust Contact email
-   - Select one or more Trust Topics
-   - Enable/disable syndication as needed
-4. Save the changes
+1. Navigate to `/admin/content/trust-metadata` to view and manage trust metadata for all nodes
+2. Edit trust metadata for individual nodes through their edit forms
+3. Filter and sort trust metadata using the provided filters
 
-### Accessing Trust Metadata via JSON:API
+### JSON:API Integration
 
-Trust metadata is exposed through the JSON:API endpoints. 
+Access trust metadata through JSON:API endpoints:
 
-Here is the easiest way to just view all syndicated nodes
+1. For a specific node:
+   ```
+   /jsonapi/node/article/{node_id}
+   ```
 
-`/api/trust-schema/syndicated-nodes`
+2. For all nodes:
+   ```
+   /jsonapi/node/article
+   ```
 
-The response will include trust metadata in this format:
-```json
-{
-  "data": [{
-    "id": "3",
-    "type": "basic_page",
-    "attributes": {
-      "title": "Example Page",
-      "trust_role": "primary_source",
-      "trust_scope": "department_level",
-      "trust_contact": "example@berkeley.edu",
-      "trust_topics": ["Science", "Mathematics"],
-      "trust_syndication_enabled": true
-    }
-  }]
-}
-```
-
-Note: 
-- Replace `{node-id}` with the actual node ID
-- Replace `your-site.com` with your actual domain
-- The `include=field_trust_topics` parameter ensures trust topics are included in the response
-- All endpoints require appropriate permissions to access
+3. Filter by trust metadata:
+   ```
+   /jsonapi/node/article?filter[field_trust_syndication_enabled]=1
+   ```
 
 ### Trust Topics
 
-The module creates a "Trust Topics" taxonomy vocabulary with default terms:
+Default trust topics include:
 - Mathematics
 - Science
 - Arts
-
-Additional terms can be added through the Drupal taxonomy interface.
+- Engineering
+- Business
+- Education
+- Health
+- Law
+- Social Sciences
+- Computer Science
+- Bingus
 
 ## Permissions
 
 The module provides two permissions:
-- "Manage trust metadata" - Allows users to assign or modify trust metadata fields
-- "View trust metadata" - Allows users to view trust metadata fields
+- `manage trust metadata`: Allows users to assign or modify trust metadata fields
+- `view trust metadata`: Allows users to view trust metadata fields
 
-## Dependencies
+## Development
 
-- Drupal Core (10.x or 11.x)
-- JSON:API module
+### Field Structure
 
-## Technical Details
+The module adds the following fields to nodes:
+- `field_trust_role`: List string field for trust roles
+- `field_trust_scope`: List string field for trust scopes
+- `field_trust_contact`: String field for contact information
+- `field_trust_topics`: Entity reference field to taxonomy terms
+- `field_trust_syndication_enabled`: Boolean field for syndication status
 
-For detailed technical documentation, see [TECHNICAL.md](TECHNICAL.md). 
+### Updating Trust Topics
+
+To add new trust topics:
+1. Navigate to Structure > Taxonomy > Trust Topics
+2. Add new terms as needed
+
+## Support
+
+For issues and feature requests, please use the module's issue queue.

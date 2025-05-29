@@ -4,3 +4,12 @@ trust-syndication:
     js/trust-syndication.js: {}
   dependencies:
     - core/drupal 
+
+trust-metadata-modal:
+  version: 1.x
+  js:
+    js/trust-metadata-modal.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/dialog 

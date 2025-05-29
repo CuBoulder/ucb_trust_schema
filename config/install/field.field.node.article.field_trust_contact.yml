@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_trust_contact
+    - node.type.article
+id: node.article.field_trust_contact
+field_name: field_trust_contact
+entity_type: node
+bundle: article
+label: 'Trust Contact'
+description: 'Contact information for the content maintainer.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string 

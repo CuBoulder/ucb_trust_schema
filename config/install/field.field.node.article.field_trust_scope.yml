@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_trust_scope
+    - node.type.article
+  module:
+    - options
+id: node.article.field_trust_scope
+field_name: field_trust_scope
+entity_type: node
+bundle: article
+label: 'Trust Scope'
+description: 'The scope of this content.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string 

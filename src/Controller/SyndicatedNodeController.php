@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Url;
+use Drupal\user\Entity\User;
 
 /**
  * Controller for syndicated nodes.
@@ -65,6 +66,59 @@ class SyndicatedNodeController extends ControllerBase {
   }
 
   /**
+   * Get default trust contacts (users with developer role).
+   *
+   * @return array
+   *   Array of user data for developers.
+   */
+  protected function getDefaultTrustContacts() {
+    $query = $this->entityTypeManager->getStorage('user')->getQuery()
+      ->condition('roles', 'developer')
+      ->condition('status', 1)
+      ->accessCheck(FALSE);
+    
+    $uids = $query->execute();
+    $users = User::loadMultiple($uids);
+    
+    $contacts = [];
+    foreach ($users as $user) {
+      $contacts[] = [
+        'id' => $user->id(),
+        'name' => $user->getDisplayName(),
+        'email' => $user->getEmail(),
+      ];
+    }
+    
+    return $contacts;
+  }
+
+  /**
+   * Parse email addresses from a string.
+   *
+   * @param string $emails
+   *   Comma-separated list of email addresses.
+   *
+   * @return array
+   *   Array of contact data.
+   */
+  protected function parseEmailContacts($emails) {
+    if (empty($emails)) {
+      return [];
+    }
+
+    $email_list = array_map('trim', explode(',', $emails));
+    $contacts = [];
+    
+    foreach ($email_list as $email) {
+      $contacts[] = [
+        'email' => $email,
+      ];
+    }
+    
+    return $contacts;
+  }
+
+  /**
    * Returns a list of syndicated nodes.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
@@ -77,15 +131,15 @@ class SyndicatedNodeController extends ControllerBase {
     $logger = $this->loggerFactory->get('ucb_trust_schema');
     
     try {
-      // Get all nodes with trust syndication enabled from our custom table
-      $query = \Drupal::database()->select('trust_metadata', 'tm')
-        ->fields('tm', ['nid'])
-        ->condition('trust_syndication_enabled', 1);
+      // Get all trust metadata entities with syndication enabled
+      $query = $this->entityTypeManager->getStorage('trust_metadata')->getQuery()
+        ->condition('trust_syndication_enabled', TRUE)
+        ->accessCheck(FALSE);
       
-      $nids = $query->execute()->fetchCol();
-      $logger->debug('Found @count nodes with trust syndication enabled', ['@count' => count($nids)]);
+      $ids = $query->execute();
+      $logger->debug('Found @count nodes with trust syndication enabled', ['@count' => count($ids)]);
       
-      if (empty($nids)) {
+      if (empty($ids)) {
         return new JsonResponse([
           'data' => [],
           'meta' => [
@@ -94,13 +148,12 @@ class SyndicatedNodeController extends ControllerBase {
         ]);
       }
       
-      $nodes = $this->entityTypeManager->getStorage('node')->loadMultiple($nids);
+      $trust_metadata_entities = $this->entityTypeManager->getStorage('trust_metadata')->loadMultiple($ids);
       
       $data = [];
-      foreach ($nodes as $node) {
-        // Get trust metadata from our custom table
-        $metadata = ucb_trust_schema_get_trust_metadata($node->id());
-        if (!$metadata || !$metadata['trust_syndication_enabled']) {
+      foreach ($trust_metadata_entities as $trust_metadata) {
+        $node = $trust_metadata->get('node_id')->entity;
+        if (!$node) {
           continue;
         }
 
@@ -147,6 +200,26 @@ class SyndicatedNodeController extends ControllerBase {
             }
           }
         }
+
+        // Get trust topics
+        $trust_topics = [];
+        foreach ($trust_metadata->get('trust_topics') as $topic) {
+          if ($topic->entity) {
+            $trust_topics[] = $topic->entity->getName();
+          }
+        }
+
+        // Get trust contacts
+        $trust_contacts = [];
+        $trust_contact_value = $trust_metadata->get('trust_contact')->value;
+        if (!empty($trust_contact_value)) {
+          // If specific contacts are set, use those email addresses directly
+          $trust_contacts = $this->parseEmailContacts($trust_contact_value);
+        }
+        else {
+          // Otherwise use default developer contacts
+          $trust_contacts = $this->getDefaultTrustContacts();
+        }
         
         $data[] = [
           'id' => $node->id(),
@@ -156,11 +229,11 @@ class SyndicatedNodeController extends ControllerBase {
             'title' => $node->getTitle(),
             'url' => $url,
             'summary' => $summary,
-            'trust_role' => $metadata['trust_role'],
-            'trust_scope' => $metadata['trust_scope'],
-            'trust_contact' => $metadata['trust_contact'],
-            'trust_topics' => $metadata['trust_topics'],
-            'trust_syndication_enabled' => $metadata['trust_syndication_enabled'],
+            'trust_role' => $trust_metadata->get('trust_role')->value,
+            'trust_scope' => $trust_metadata->get('trust_scope')->value,
+            'trust_contact' => $trust_contacts,
+            'trust_topics' => $trust_topics,
+            'trust_syndication_enabled' => $trust_metadata->get('trust_syndication_enabled')->value,
           ],
         ];
       }

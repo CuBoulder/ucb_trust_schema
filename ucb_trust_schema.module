@@ -43,27 +43,13 @@ function ucb_trust_schema_permission() {
  * Implements hook_entity_insert().
  */
 function ucb_trust_schema_entity_insert(EntityInterface $entity) {
-  if ($entity instanceof NodeInterface && $entity->bundle() === 'article') {
-    // Initialize trust metadata for new articles
-    ucb_trust_schema_update_trust_metadata($entity->id(), [
-      'trust_role' => '',
-      'trust_scope' => '',
-      'trust_contact' => '',
-      'trust_topics' => [],
-      'trust_syndication_enabled' => FALSE,
-    ]);
-  }
-}
-
-/**
- * Implements hook_entity_delete().
- */
-function ucb_trust_schema_entity_delete(EntityInterface $entity) {
-  if ($entity instanceof NodeInterface && $entity->bundle() === 'article') {
-    // Delete trust metadata when article is deleted
-    \Drupal::database()->delete('trust_metadata')
-      ->condition('nid', $entity->id())
-      ->execute();
+  if ($entity instanceof NodeInterface) {
+    // Set default values for new nodes
+    $entity->set('field_trust_role', '');
+    $entity->set('field_trust_scope', '');
+    $entity->set('field_trust_contact', '');
+    $entity->set('field_trust_syndication_enabled', FALSE);
+    $entity->save();
   }
 }
 
@@ -77,14 +63,8 @@ function ucb_trust_schema_entity_delete(EntityInterface $entity) {
  *   The trust metadata array.
  */
 function ucb_trust_schema_get_trust_metadata($nid) {
-  $query = \Drupal::database()->select('trust_metadata', 'tm')
-    ->fields('tm')
-    ->condition('nid', $nid)
-    ->execute();
-  
-  $record = $query->fetchAssoc();
-  
-  if (!$record) {
+  $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
+  if (!$node) {
     return [
       'trust_role' => NULL,
       'trust_scope' => NULL,
@@ -94,27 +74,17 @@ function ucb_trust_schema_get_trust_metadata($nid) {
     ];
   }
 
-  // Convert trust topics from JSON array of IDs to array of term names
-  $trust_topics = json_decode($record['trust_topics'], TRUE) ?: [];
-  if (!empty($trust_topics)) {
-    $term_ids = array_map('intval', $trust_topics);
-    $terms = \Drupal::entityTypeManager()
-      ->getStorage('taxonomy_term')
-      ->loadMultiple($term_ids);
-    
-    $term_names = [];
-    foreach ($terms as $term) {
-      $term_names[] = $term->getName();
-    }
-    $trust_topics = $term_names;
+  $trust_topics = [];
+  foreach ($node->get('field_trust_topics') as $topic) {
+    $trust_topics[] = $topic->entity->getName();
   }
 
   return [
-    'trust_role' => $record['trust_role'],
-    'trust_scope' => $record['trust_scope'],
-    'trust_contact' => $record['trust_contact'],
+    'trust_role' => $node->get('field_trust_role')->value,
+    'trust_scope' => $node->get('field_trust_scope')->value,
+    'trust_contact' => $node->get('field_trust_contact')->value,
     'trust_topics' => $trust_topics,
-    'trust_syndication_enabled' => (bool) $record['trust_syndication_enabled'],
+    'trust_syndication_enabled' => $node->get('field_trust_syndication_enabled')->value,
   ];
 }
 
@@ -130,37 +100,29 @@ function ucb_trust_schema_get_trust_metadata($nid) {
  *   TRUE if the update was successful, FALSE otherwise.
  */
 function ucb_trust_schema_update_trust_metadata($nid, array $metadata) {
-  // Get existing metadata first
-  $existing = ucb_trust_schema_get_trust_metadata($nid);
-  
-  // Prepare the data for saving, preserving existing values if not provided
-  $data = [
-    'nid' => $nid,
-    'uuid' => \Drupal::entityTypeManager()->getStorage('node')->load($nid)->uuid(),
-    'trust_role' => $metadata['trust_role'] ?? $existing['trust_role'],
-    'trust_scope' => $metadata['trust_scope'] ?? $existing['trust_scope'],
-    'trust_contact' => $metadata['trust_contact'] ?? $existing['trust_contact'],
-    'trust_topics' => isset($metadata['trust_topics']) ? json_encode($metadata['trust_topics']) : $existing['trust_topics'],
-    'trust_syndication_enabled' => isset($metadata['trust_syndication_enabled']) ? (int) $metadata['trust_syndication_enabled'] : (int) $existing['trust_syndication_enabled'],
-    'changed' => \Drupal::time()->getRequestTime(),
-  ];
+  $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
+  if (!$node) {
+    return FALSE;
+  }
 
-  // If this is a new record, add created timestamp
-  $exists = \Drupal::database()->select('trust_metadata', 'tm')
-    ->condition('nid', $nid)
-    ->countQuery()
-    ->execute()
-    ->fetchField();
-
-  if (!$exists) {
-    $data['created'] = $data['changed'];
+  if (isset($metadata['trust_role'])) {
+    $node->set('field_trust_role', $metadata['trust_role']);
+  }
+  if (isset($metadata['trust_scope'])) {
+    $node->set('field_trust_scope', $metadata['trust_scope']);
+  }
+  if (isset($metadata['trust_contact'])) {
+    $node->set('field_trust_contact', $metadata['trust_contact']);
+  }
+  if (isset($metadata['trust_topics'])) {
+    $node->set('field_trust_topics', $metadata['trust_topics']);
+  }
+  if (isset($metadata['trust_syndication_enabled'])) {
+    $node->set('field_trust_syndication_enabled', $metadata['trust_syndication_enabled']);
   }
 
   try {
-    \Drupal::database()->merge('trust_metadata')
-      ->key(['nid' => $nid])
-      ->fields($data)
-      ->execute();
+    $node->save();
     return TRUE;
   }
   catch (\Exception $e) {
@@ -181,30 +143,7 @@ function ucb_trust_schema_update_trust_metadata($nid, array $metadata) {
  *   TRUE if the update was successful, FALSE otherwise.
  */
 function ucb_trust_schema_toggle_syndication($nid, $enabled) {
-  // Get existing metadata first
-  $metadata = ucb_trust_schema_get_trust_metadata($nid);
-  
-  // Update only the syndication status while preserving other fields
-  $metadata['trust_syndication_enabled'] = $enabled;
-  
-  return ucb_trust_schema_update_trust_metadata($nid, $metadata);
-}
-
-/**
- * Implements hook_theme().
- */
-function ucb_trust_schema_theme() {
-  return [
-    'trust_syndication_page' => [
-      'variables' => [
-        'node' => NULL,
-        'metadata' => [],
-        'attributes' => [],
-      ],
-      'template' => 'trust-syndication-page',
-      'path' => \Drupal::service('extension.list.module')->getPath('ucb_trust_schema') . '/templates',
-    ],
-  ];
+  return ucb_trust_schema_update_trust_metadata($nid, ['trust_syndication_enabled' => $enabled]);
 }
 
 /**

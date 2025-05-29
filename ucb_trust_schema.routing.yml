@@ -63,52 +63,16 @@ ucb_trust_schema.trust_syndication_page:
       node:
         type: entity:node
 
-ucb_trust_schema.overview:
-  path: '/admin/config/ucb-trust-schema'
-  defaults:
-    _controller: '\Drupal\ucb_trust_schema\Controller\TrustSyndicationOverviewController::content'
-    _title: 'Trust Syndication Overview'
-  requirements:
-    _permission: 'manage trust metadata'
-  options:
-    _admin_route: TRUE
-
 ucb_trust_schema.syndicated_nodes:
   path: '/api/trust-schema/syndicated-nodes'
   defaults:
     _controller: '\Drupal\ucb_trust_schema\Controller\SyndicatedNodeController::list'
     _title: 'Syndicated Nodes'
   requirements:
-    _permission: 'view trust metadata'
+    _access: 'TRUE'
   methods: [GET]
   options:
     no_cache: TRUE
-
-ucb_trust_schema.trust_metadata_form:
-  path: '/node/{node}/trust-metadata'
-  defaults:
-    _form: '\Drupal\ucb_trust_schema\Form\TrustMetadataForm'
-    _title: 'Trust Metadata'
-  requirements:
-    _permission: 'administer nodes'
-    node: \d+
-  options:
-    _admin_route: TRUE
-
-ucb_trust_schema.trust_syndication_toggle:
-  path: '/trust-syndication/toggle/{node}'
-  defaults:
-    _controller: '\Drupal\ucb_trust_schema\Controller\TrustSyndicationController::toggleSyndication'
-    _title: 'Toggle Trust Syndication'
-  requirements:
-    _permission: 'manage trust metadata'
-    node: \d+
-  options:
-    parameters:
-      node:
-        type: entity:node
-    _access_checks: ['trust_syndication.save_access']
-  methods: [POST]
 
 trust_syndication.topics:
   path: '/trust-syndication/topics'
@@ -116,4 +80,18 @@ trust_syndication.topics:
     _controller: '\Drupal\ucb_trust_schema\Controller\TrustSchemaController::getTopics'
     _title: 'Get Trust Topics'
   requirements:
-    _permission: 'access content' 
+    _permission: 'access content'
+
+ucb_trust_schema.trust_metadata.edit:
+  path: '/trust-metadata/{node}/edit'
+  defaults:
+    _controller: '\Drupal\ucb_trust_schema\Controller\TrustMetadataController::editForm'
+    _title: 'Edit Trust Metadata'
+  requirements:
+    _permission: 'administer trust metadata'
+  options:
+    parameters:
+      node:
+        type: entity:node
+      request:
+        type: request 

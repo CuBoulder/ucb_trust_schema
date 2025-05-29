@@ -6,91 +6,44 @@
  */
 
 use Drupal\Core\Database\Database;
+use Drupal\ucb_trust_schema\Entity\TrustMetadata;
+use Drupal\taxonomy\Entity\Term;
 
 /**
  * Implements hook_install().
  */
 function ucb_trust_schema_install() {
-  // Create the trust metadata table
-  $schema = [
-    'description' => 'Stores trust metadata for nodes',
-    'fields' => [
-      'nid' => [
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'description' => 'The node ID',
-      ],
-      'uuid' => [
-        'type' => 'varchar',
-        'length' => 128,
-        'not null' => TRUE,
-        'description' => 'The unique identifier for the trust metadata',
-      ],
-      'trust_role' => [
-        'type' => 'varchar',
-        'length' => 32,
-        'not null' => TRUE,
-        'default' => '',
-        'description' => 'The trust role of the content',
-      ],
-      'trust_scope' => [
-        'type' => 'varchar',
-        'length' => 32,
-        'not null' => TRUE,
-        'default' => '',
-        'description' => 'The scope of the content',
-      ],
-      'trust_contact' => [
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => FALSE,
-        'default' => '',
-        'description' => 'Contact information for the content maintainer',
-      ],
-      'trust_topics' => [
-        'type' => 'text',
-        'not null' => FALSE,
-        'description' => 'JSON encoded array of trust topics',
-      ],
-      'trust_syndication_enabled' => [
-        'type' => 'int',
-        'size' => 'tiny',
-        'not null' => TRUE,
-        'default' => 0,
-        'description' => 'Whether trust syndication is enabled',
-      ],
-      'created' => [
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 0,
-        'description' => 'The Unix timestamp when the record was created',
-      ],
-      'changed' => [
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 0,
-        'description' => 'The Unix timestamp when the record was last updated',
-      ],
-    ],
-    'primary key' => ['nid'],
-    'indexes' => [
-      'uuid' => ['uuid'],
-      'trust_role' => ['trust_role'],
-      'trust_scope' => ['trust_scope'],
-      'trust_syndication_enabled' => ['trust_syndication_enabled'],
-    ],
+  // Create default trust topics
+  $topics = [
+    'Mathematics' => 'Mathematics and related fields',
+    'Science' => 'Natural sciences and related fields',
+    'Arts' => 'Arts and humanities',
+    'Engineering' => 'Engineering and technology',
+    'Business' => 'Business and economics',
+    'Education' => 'Education and teaching',
+    'Health' => 'Health and medicine',
+    'Law' => 'Law and legal studies',
+    'Social Sciences' => 'Social sciences and human behavior',
+    'Computer Science' => 'Computer science and information technology',
+    'Bingus' => 'The study of Bingus and related phenomena',
   ];
 
-  Database::getConnection()->schema()->createTable('trust_metadata', $schema);
+  foreach ($topics as $name => $description) {
+    $term = Term::create([
+      'vid' => 'trust_topics',
+      'name' => $name,
+      'description' => $description,
+      'weight' => 0,
+    ]);
+    $term->save();
+  }
 }
 
 /**
  * Implements hook_uninstall().
  */
 function ucb_trust_schema_uninstall() {
-  // Remove the trust metadata table
-  Database::getConnection()->schema()->dropTable('trust_metadata');
+  // No longer need to drop the custom table as we're using entities
 }
 
 /**
@@ -145,4 +98,185 @@ function ucb_trust_schema_update_9001() {
       ->fields($trust_metadata)
       ->execute();
   }
+}
+
+/**
+ * Migrate data from custom table to entity type.
+ */
+function ucb_trust_schema_update_9002() {
+  $database = \Drupal::database();
+  
+  // Check if the old table exists
+  if (!$database->schema()->tableExists('trust_metadata')) {
+    return;
+  }
+
+  // Get all records from the old table
+  $records = $database->select('trust_metadata', 'tm')
+    ->fields('tm')
+    ->execute()
+    ->fetchAll();
+
+  foreach ($records as $record) {
+    // Create new entity
+    $trust_metadata = TrustMetadata::create([
+      'node_id' => $record->nid,
+      'trust_role' => $record->trust_role,
+      'trust_scope' => $record->trust_scope,
+      'trust_contact' => $record->trust_contact,
+      'trust_syndication_enabled' => (bool) $record->trust_syndication_enabled,
+    ]);
+
+    // Handle trust topics
+    if (!empty($record->trust_topics)) {
+      $topic_ids = json_decode($record->trust_topics, TRUE);
+      if (!empty($topic_ids)) {
+        $trust_metadata->set('trust_topics', $topic_ids);
+      }
+    }
+
+    try {
+      $trust_metadata->save();
+    }
+    catch (\Exception $e) {
+      \Drupal::logger('ucb_trust_schema')->error('Failed to migrate trust metadata for node @nid: @error', [
+        '@nid' => $record->nid,
+        '@error' => $e->getMessage(),
+      ]);
+    }
+  }
+
+  // Drop the old table
+  $database->schema()->dropTable('trust_metadata');
+}
+
+/**
+ * Create trust metadata entities for all existing nodes.
+ */
+function ucb_trust_schema_update_9004() {
+  // Get all nodes
+  $query = \Drupal::entityQuery('node')
+    ->accessCheck(FALSE);
+  $nids = $query->execute();
+
+  foreach ($nids as $nid) {
+    // Check if trust metadata already exists for this node
+    $existing = \Drupal::entityQuery('trust_metadata')
+      ->condition('node_id', $nid)
+      ->accessCheck(FALSE)
+      ->execute();
+
+    if (empty($existing)) {
+      // Create new trust metadata entity
+      $trust_metadata = TrustMetadata::create([
+        'node_id' => $nid,
+        'trust_role' => '',
+        'trust_scope' => '',
+        'trust_contact' => '',
+        'trust_syndication_enabled' => FALSE,
+      ]);
+
+      try {
+        $trust_metadata->save();
+        \Drupal::logger('ucb_trust_schema')->notice('Created trust metadata for node @nid', ['@nid' => $nid]);
+      }
+      catch (\Exception $e) {
+        \Drupal::logger('ucb_trust_schema')->error('Failed to create trust metadata for node @nid: @error', [
+          '@nid' => $nid,
+          '@error' => $e->getMessage(),
+        ]);
+      }
+    }
+  }
+}
+
+/**
+ * Create default trust topics.
+ */
+function ucb_trust_schema_update_9005() {
+  $topics = [
+    'Mathematics' => 'Mathematics and related fields',
+    'Science' => 'Natural sciences and related fields',
+    'Arts' => 'Arts and humanities',
+    'Engineering' => 'Engineering and technology',
+    'Business' => 'Business and economics',
+    'Education' => 'Education and teaching',
+    'Health' => 'Health and medicine',
+    'Law' => 'Law and legal studies',
+    'Social Sciences' => 'Social sciences and human behavior',
+    'Computer Science' => 'Computer science and information technology',
+    'Bingus' => 'The study of Bingus and related phenomena',
+  ];
+
+  foreach ($topics as $name => $description) {
+    // Check if term already exists
+    $existing = \Drupal::entityQuery('taxonomy_term')
+      ->condition('vid', 'trust_topics')
+      ->condition('name', $name)
+      ->accessCheck(FALSE)
+      ->execute();
+
+    if (empty($existing)) {
+      $term = Term::create([
+        'vid' => 'trust_topics',
+        'name' => $name,
+        'description' => $description,
+        'weight' => 0,
+      ]);
+      $term->save();
+      \Drupal::logger('ucb_trust_schema')->notice('Created trust topic: @name', ['@name' => $name]);
+    }
+  }
+}
+
+/**
+ * Migrate data from custom entity to node fields.
+ */
+function ucb_trust_schema_update_9003() {
+  $database = \Drupal::database();
+  
+  // Check if the old table exists
+  if (!$database->schema()->tableExists('trust_metadata')) {
+    return;
+  }
+
+  // Get all records from the old table
+  $records = $database->select('trust_metadata', 'tm')
+    ->fields('tm')
+    ->execute()
+    ->fetchAll();
+
+  foreach ($records as $record) {
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($record->node_id);
+    if (!$node) {
+      continue;
+    }
+
+    // Update node fields
+    $node->set('field_trust_role', $record->trust_role);
+    $node->set('field_trust_scope', $record->trust_scope);
+    $node->set('field_trust_contact', $record->trust_contact);
+    $node->set('field_trust_syndication_enabled', (bool) $record->trust_syndication_enabled);
+
+    // Handle trust topics
+    if (!empty($record->trust_topics)) {
+      $topic_ids = json_decode($record->trust_topics, TRUE);
+      if (!empty($topic_ids)) {
+        $node->set('field_trust_topics', $topic_ids);
+      }
+    }
+
+    try {
+      $node->save();
+    }
+    catch (\Exception $e) {
+      \Drupal::logger('ucb_trust_schema')->error('Failed to migrate trust metadata for node @nid: @error', [
+        '@nid' => $record->node_id,
+        '@error' => $e->getMessage(),
+      ]);
+    }
+  }
+
+  // Drop the old table
+  $database->schema()->dropTable('trust_metadata');
 } 
