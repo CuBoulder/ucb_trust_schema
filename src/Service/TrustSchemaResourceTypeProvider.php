@@ -75,19 +75,44 @@ class TrustSchemaResourceTypeProvider {
     $logger = $this->loggerFactory->get('ucb_trust_schema');
     $logger->debug('alterResourceType called for type: @type', ['@type' => $resource_type->getEntityTypeId()]);
     
-    if ($resource_type->getEntityTypeId() === 'node') {
-      $logger->debug('Adding trust_topics field to node resource type');
+    if ($resource_type->getEntityTypeId() === 'trust_metadata') {
+      $logger->debug('Adding trust metadata fields to resource type');
       
-      $resource_type->addField('trust_topics', [
-        'fieldName' => 'trust_topics',
-        'publicName' => 'trust_topics',
+      // Add all trust metadata fields
+      $fields = [
+        'trust_role',
+        'trust_scope',
+        'trust_contact',
+        'trust_topics',
+        'trust_syndication_enabled',
+        'node_id',
+      ];
+      
+      foreach ($fields as $field) {
+        $resource_type->addField($field, [
+          'fieldName' => $field,
+          'publicName' => $field,
+          'enabled' => TRUE,
+          'fieldType' => $field === 'trust_topics' ? 'string' : 'string',
+          'isComputed' => $field === 'trust_topics',
+        ]);
+      }
+      
+      $logger->debug('Trust metadata fields added to resource type');
+    }
+    elseif ($resource_type->getEntityTypeId() === 'node') {
+      $logger->debug('Adding trust metadata relationship to node resource type');
+      
+      // Add trust metadata relationship
+      $resource_type->addRelationship('trust_metadata', [
+        'fieldName' => 'trust_metadata',
+        'publicName' => 'trust_metadata',
         'enabled' => TRUE,
-        'fieldType' => 'string',
-        'isComputed' => TRUE,
-        'fieldAccessor' => [$this->trustTopicsFieldAccessor, 'getTrustTopics'],
+        'fieldType' => 'entity_reference',
+        'targetResourceType' => 'trust_metadata--trust_metadata',
       ]);
       
-      $logger->debug('trust_topics field added to node resource type');
+      $logger->debug('Trust metadata relationship added to node resource type');
     }
   }
 

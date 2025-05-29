@@ -8,6 +8,7 @@
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\node\NodeInterface;
+use Drupal\ucb_trust_schema\Entity\TrustMetadata;
 
 /**
  * Implements hook_help().
@@ -44,12 +45,33 @@ function ucb_trust_schema_permission() {
  */
 function ucb_trust_schema_entity_insert(EntityInterface $entity) {
   if ($entity instanceof NodeInterface) {
-    // Set default values for new nodes
-    $entity->set('field_trust_role', '');
-    $entity->set('field_trust_scope', '');
-    $entity->set('field_trust_contact', '');
-    $entity->set('field_trust_syndication_enabled', FALSE);
-    $entity->save();
+    // Create trust metadata entity for all nodes
+    $trust_metadata = TrustMetadata::create([
+      'node_id' => $entity->id(),
+      'trust_role' => '',
+      'trust_scope' => '',
+      'trust_contact' => '',
+      'trust_syndication_enabled' => FALSE,
+    ]);
+    $trust_metadata->save();
+  }
+}
+
+/**
+ * Implements hook_entity_delete().
+ */
+function ucb_trust_schema_entity_delete(EntityInterface $entity) {
+  if ($entity instanceof NodeInterface) {
+    // Delete trust metadata when node is deleted
+    $query = \Drupal::entityQuery('trust_metadata')
+      ->condition('node_id', $entity->id())
+      ->accessCheck(FALSE);
+    $ids = $query->execute();
+    if (!empty($ids)) {
+      $storage = \Drupal::entityTypeManager()->getStorage('trust_metadata');
+      $entities = $storage->loadMultiple($ids);
+      $storage->delete($entities);
+    }
   }
 }
 
@@ -63,8 +85,12 @@ function ucb_trust_schema_entity_insert(EntityInterface $entity) {
  *   The trust metadata array.
  */
 function ucb_trust_schema_get_trust_metadata($nid) {
-  $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
-  if (!$node) {
+  $query = \Drupal::entityQuery('trust_metadata')
+    ->condition('node_id', $nid)
+    ->accessCheck(FALSE);
+  $ids = $query->execute();
+
+  if (empty($ids)) {
     return [
       'trust_role' => NULL,
       'trust_scope' => NULL,
@@ -74,17 +100,18 @@ function ucb_trust_schema_get_trust_metadata($nid) {
     ];
   }
 
+  $trust_metadata = TrustMetadata::load(reset($ids));
   $trust_topics = [];
-  foreach ($node->get('field_trust_topics') as $topic) {
+  foreach ($trust_metadata->get('trust_topics') as $topic) {
     $trust_topics[] = $topic->entity->getName();
   }
 
   return [
-    'trust_role' => $node->get('field_trust_role')->value,
-    'trust_scope' => $node->get('field_trust_scope')->value,
-    'trust_contact' => $node->get('field_trust_contact')->value,
+    'trust_role' => $trust_metadata->get('trust_role')->value,
+    'trust_scope' => $trust_metadata->get('trust_scope')->value,
+    'trust_contact' => $trust_metadata->get('trust_contact')->value,
     'trust_topics' => $trust_topics,
-    'trust_syndication_enabled' => $node->get('field_trust_syndication_enabled')->value,
+    'trust_syndication_enabled' => $trust_metadata->get('trust_syndication_enabled')->value,
   ];
 }
 
@@ -100,29 +127,38 @@ function ucb_trust_schema_get_trust_metadata($nid) {
  *   TRUE if the update was successful, FALSE otherwise.
  */
 function ucb_trust_schema_update_trust_metadata($nid, array $metadata) {
-  $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
-  if (!$node) {
-    return FALSE;
+  $query = \Drupal::entityQuery('trust_metadata')
+    ->condition('node_id', $nid)
+    ->accessCheck(FALSE);
+  $ids = $query->execute();
+
+  if (empty($ids)) {
+    $trust_metadata = TrustMetadata::create([
+      'node_id' => $nid,
+    ]);
+  }
+  else {
+    $trust_metadata = TrustMetadata::load(reset($ids));
   }
 
   if (isset($metadata['trust_role'])) {
-    $node->set('field_trust_role', $metadata['trust_role']);
+    $trust_metadata->set('trust_role', $metadata['trust_role']);
   }
   if (isset($metadata['trust_scope'])) {
-    $node->set('field_trust_scope', $metadata['trust_scope']);
+    $trust_metadata->set('trust_scope', $metadata['trust_scope']);
   }
   if (isset($metadata['trust_contact'])) {
-    $node->set('field_trust_contact', $metadata['trust_contact']);
+    $trust_metadata->set('trust_contact', $metadata['trust_contact']);
   }
   if (isset($metadata['trust_topics'])) {
-    $node->set('field_trust_topics', $metadata['trust_topics']);
+    $trust_metadata->set('trust_topics', $metadata['trust_topics']);
   }
   if (isset($metadata['trust_syndication_enabled'])) {
-    $node->set('field_trust_syndication_enabled', $metadata['trust_syndication_enabled']);
+    $trust_metadata->set('trust_syndication_enabled', $metadata['trust_syndication_enabled']);
   }
 
   try {
-    $node->save();
+    $trust_metadata->save();
     return TRUE;
   }
   catch (\Exception $e) {
