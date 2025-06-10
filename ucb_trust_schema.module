@@ -194,4 +194,29 @@ function ucb_trust_schema_jsonapi_node_query_alter(\Drupal\Core\Database\Query\S
  */
 function ucb_trust_schema_jsonapi_node_field_alter(&$field_value, $field, $entity, $resource_type) {
   \Drupal::service('ucb_trust_schema.jsonapi')->alterFieldValue($field_value, $field->getPublicName(), $entity);
+}
+
+/**
+ * Implements hook_jsonapi_entity_filter_access().
+ */
+function ucb_trust_schema_jsonapi_entity_filter_access(\Drupal\Core\Entity\EntityTypeInterface $entity_type, \Drupal\Core\Session\AccountInterface $account) {
+  if ($entity_type->id() === 'trust_metadata') {
+    return [
+      'filter_among_all' => \Drupal\Core\Access\AccessResult::allowed(),
+      'filter_among_enabled' => \Drupal\Core\Access\AccessResult::allowed(),
+      'filter_among_published' => \Drupal\Core\Access\AccessResult::allowed(),
+    ];
+  }
+  return [];
+}
+
+/**
+ * Implements hook_jsonapi_ENTITY_TYPE_filter_access().
+ */
+function ucb_trust_schema_jsonapi_trust_metadata_filter_access(\Drupal\Core\Entity\EntityTypeInterface $entity_type, \Drupal\Core\Session\AccountInterface $account) {
+  return [
+    'filter_among_all' => \Drupal\Core\Access\AccessResult::allowed(),
+    'filter_among_enabled' => \Drupal\Core\Access\AccessResult::allowed(),
+    'filter_among_published' => \Drupal\Core\Access\AccessResult::allowed(),
+  ];
 } 
