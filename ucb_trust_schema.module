@@ -219,4 +219,42 @@ function ucb_trust_schema_jsonapi_trust_metadata_filter_access(\Drupal\Core\Enti
     'filter_among_enabled' => \Drupal\Core\Access\AccessResult::allowed(),
     'filter_among_published' => \Drupal\Core\Access\AccessResult::allowed(),
   ];
+}
+
+/**
+ * Implements hook_cron().
+ */
+function ucb_trust_schema_cron() {
+  // Get all node IDs.
+  $query = \Drupal::entityQuery('node')->accessCheck(FALSE);
+  $nids = $query->execute();
+
+  foreach ($nids as $nid) {
+    // Check if trust metadata already exists for this node.
+    $existing = \Drupal::entityQuery('trust_metadata')
+      ->condition('node_id', $nid)
+      ->accessCheck(FALSE)
+      ->execute();
+
+    if (empty($existing)) {
+      // Create new trust metadata entity.
+      $trust_metadata = \Drupal\ucb_trust_schema\Entity\TrustMetadata::create([
+        'node_id' => $nid,
+        'trust_role' => '',
+        'trust_scope' => '',
+        'trust_contact' => '',
+        'trust_syndication_enabled' => FALSE,
+      ]);
+      try {
+        $trust_metadata->save();
+        \Drupal::logger('ucb_trust_schema')->notice('Created trust metadata for node @nid during cron', ['@nid' => $nid]);
+      }
+      catch (\Exception $e) {
+        \Drupal::logger('ucb_trust_schema')->error('Failed to create trust metadata for node @nid during cron: @error', [
+          '@nid' => $nid,
+          '@error' => $e->getMessage(),
+        ]);
+      }
+    }
+  }
 } 

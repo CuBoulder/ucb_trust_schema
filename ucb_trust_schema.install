@@ -25,7 +25,12 @@ function ucb_trust_schema_install() {
     'Law' => 'Law and legal studies',
     'Social Sciences' => 'Social sciences and human behavior',
     'Computer Science' => 'Computer science and information technology',
-    'Bingus' => 'The study of Bingus and related phenomena',
+    'Registration' => 'Student registration and enrollment',
+    'Commencement' => 'Graduation and commencement ceremonies',
+    'Financial Aid' => 'Financial aid, scholarships, and student funding',
+    'Admissions' => 'Undergraduate and graduate admissions',
+    'Student Life' => 'Student life, housing, and campus activities',
+    'Research' => 'Research, grants, and academic projects',
   ];
 
   foreach ($topics as $name => $description) {
@@ -205,7 +210,12 @@ function ucb_trust_schema_update_9005() {
     'Law' => 'Law and legal studies',
     'Social Sciences' => 'Social sciences and human behavior',
     'Computer Science' => 'Computer science and information technology',
-    'Bingus' => 'The study of Bingus and related phenomena',
+    'Registration' => 'Student registration and enrollment',
+    'Commencement' => 'Graduation and commencement ceremonies',
+    'Financial Aid' => 'Financial aid, scholarships, and student funding',
+    'Admissions' => 'Undergraduate and graduate admissions',
+    'Student Life' => 'Student life, housing, and campus activities',
+    'Research' => 'Research, grants, and academic projects',
   ];
 
   foreach ($topics as $name => $description) {
