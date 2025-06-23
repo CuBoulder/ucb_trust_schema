@@ -1,0 +1,6 @@
+{
+    "name": "cu-boulder/ucb_trust_schema",
+    "description": "University of Colorado Boulder Trust Schema Module",
+    "license": "MIT",
+    "type": "drupal-custom-module"
+} 
