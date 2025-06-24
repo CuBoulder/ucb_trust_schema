@@ -1,0 +1,8 @@
+manage trust metadata:
+  title: 'Manage trust metadata'
+  description: 'Assign or modify trust metadata fields on content.'
+  restrict access: true
+
+view trust metadata:
+  title: 'View trust metadata'
+  description: 'View trust metadata fields on content.' 

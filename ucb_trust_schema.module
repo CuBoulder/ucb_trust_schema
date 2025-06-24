@@ -24,23 +24,6 @@ function ucb_trust_schema_help($route_name, RouteMatchInterface $route_match) {
 }
 
 /**
- * Implements hook_permission().
- */
-function ucb_trust_schema_permission() {
-  return [
-    'manage trust metadata' => [
-      'title' => t('Manage trust metadata'),
-      'description' => t('Assign or modify trust metadata fields on content.'),
-      'restrict_access' => TRUE,
-    ],
-    'view trust metadata' => [
-      'title' => t('View trust metadata'),
-      'description' => t('View trust metadata fields on content.'),
-    ],
-  ];
-}
-
-/**
  * Implements hook_entity_insert().
  */
 function ucb_trust_schema_entity_insert(EntityInterface $entity) {
