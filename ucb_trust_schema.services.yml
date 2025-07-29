@@ -20,4 +20,7 @@ services:
       - { name: normalizer, priority: 30 }
   ucb_trust_schema.trust_topics_field_accessor:
     class: Drupal\ucb_trust_schema\Field\TrustTopicsFieldAccessor
-    arguments: ['@entity_type.manager'] 
+    arguments: ['@entity_type.manager']
+  ucb_trust_schema.analytics:
+    class: Drupal\ucb_trust_schema\Service\TrustSchemaAnalyticsService
+    arguments: ['@entity_type.manager', '@logger.factory'] 

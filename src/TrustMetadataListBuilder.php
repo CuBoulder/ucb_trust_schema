@@ -23,6 +23,8 @@ class TrustMetadataListBuilder extends EntityListBuilder {
     $header['trust_scope'] = $this->t('Trust Scope');
     $header['trust_topics'] = $this->t('Trust Topics');
     $header['trust_syndication_enabled'] = $this->t('Syndication Enabled');
+    $header['consumer_sites'] = $this->t('Consumer Sites');
+    $header['total_views'] = $this->t('Total Views');
     return $header + parent::buildHeader();
   }
 
@@ -43,6 +45,11 @@ class TrustMetadataListBuilder extends EntityListBuilder {
     }
     $row['trust_topics'] = implode(', ', $topics);
     $row['trust_syndication_enabled'] = $entity->get('trust_syndication_enabled')->value ? $this->t('Yes') : $this->t('No');
+    
+    // Analytics columns
+    $row['consumer_sites'] = $entity->get('syndication_consumer_sites')->value ?? 0;
+    $row['total_views'] = $entity->get('syndication_total_views')->value ?? 0;
+    
     return $row + parent::buildRow($entity);
   }
 

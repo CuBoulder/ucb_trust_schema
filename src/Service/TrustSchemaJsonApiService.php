@@ -54,6 +54,24 @@ class TrustSchemaJsonApiService {
   }
 
   /**
+   * Alters field values for trust_metadata entities in JSON:API response.
+   *
+   * @param mixed &$field_value
+   *   The field value to alter.
+   * @param string $field_name
+   *   The field name.
+   * @param \Drupal\ucb_trust_schema\Entity\TrustMetadata $entity
+   *   The trust metadata entity.
+   */
+  public function alterTrustMetadataFieldValue(&$field_value, $field_name, $entity) {
+    // For trust_metadata entities, we can directly access the field values
+    // since they're stored as entity fields
+    if ($entity->hasField($field_name)) {
+      $field_value = $entity->get($field_name)->value;
+    }
+  }
+
+  /**
    * Alters the node query for JSON:API.
    *
    * @param \Drupal\Core\Database\Query\Select $query

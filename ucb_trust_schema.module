@@ -80,6 +80,9 @@ function ucb_trust_schema_get_trust_metadata($nid) {
       'trust_contact' => NULL,
       'trust_topics' => [],
       'trust_syndication_enabled' => FALSE,
+      'syndication_consumer_sites' => 0,
+      'syndication_total_views' => 0,
+      'syndication_consumer_sites_list' => '',
     ];
   }
 
@@ -95,6 +98,9 @@ function ucb_trust_schema_get_trust_metadata($nid) {
     'trust_contact' => $trust_metadata->get('trust_contact')->value,
     'trust_topics' => $trust_topics,
     'trust_syndication_enabled' => $trust_metadata->get('trust_syndication_enabled')->value,
+    'syndication_consumer_sites' => $trust_metadata->get('syndication_consumer_sites')->value ?? 0,
+    'syndication_total_views' => $trust_metadata->get('syndication_total_views')->value ?? 0,
+    'syndication_consumer_sites_list' => $trust_metadata->get('syndication_consumer_sites_list')->value ?? '',
   ];
 }
 
@@ -177,6 +183,13 @@ function ucb_trust_schema_jsonapi_node_query_alter(\Drupal\Core\Database\Query\S
  */
 function ucb_trust_schema_jsonapi_node_field_alter(&$field_value, $field, $entity, $resource_type) {
   \Drupal::service('ucb_trust_schema.jsonapi')->alterFieldValue($field_value, $field->getPublicName(), $entity);
+}
+
+/**
+ * Implements hook_jsonapi_ENTITY_TYPE_FIELD_NAME_alter().
+ */
+function ucb_trust_schema_jsonapi_trust_metadata_field_alter(&$field_value, $field, $entity, $resource_type) {
+  \Drupal::service('ucb_trust_schema.jsonapi')->alterTrustMetadataFieldValue($field_value, $field->getPublicName(), $entity);
 }
 
 /**

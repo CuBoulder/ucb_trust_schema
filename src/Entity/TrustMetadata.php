@@ -165,6 +165,58 @@ class TrustMetadata extends ContentEntityBase implements ContentEntityInterface 
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
+    // Syndication analytics fields
+    $fields['syndication_consumer_sites'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Consumer Sites Count'))
+      ->setDescription(t('Number of sites that are consuming this content.'))
+      ->setDefaultValue(0)
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'number_integer',
+        'weight' => 1,
+      ])
+      ->setDisplayOptions('form', [
+        'type' => 'number',
+        'weight' => 1,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE)
+      ->setReadOnly(TRUE);
+
+    $fields['syndication_total_views'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Total Views'))
+      ->setDescription(t('Total number of views across all consumer sites.'))
+      ->setDefaultValue(0)
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'number_integer',
+        'weight' => 2,
+      ])
+      ->setDisplayOptions('form', [
+        'type' => 'number',
+        'weight' => 2,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE)
+      ->setReadOnly(TRUE);
+
+    $fields['syndication_consumer_sites_list'] = BaseFieldDefinition::create('string_long')
+      ->setLabel(t('Consumer Sites'))
+      ->setDescription(t('List of sites consuming this content.'))
+      ->setDefaultValue('')
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'string',
+        'weight' => 3,
+      ])
+      ->setDisplayOptions('form', [
+        'type' => 'string_textarea',
+        'weight' => 3,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE)
+      ->setReadOnly(TRUE);
+
     return $fields;
   }
 

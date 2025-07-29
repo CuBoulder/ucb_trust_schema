@@ -1,3 +1,11 @@
+# Trust Metadata local task for admin/content primary tabs
+ucb_trust_schema.admin_trust_metadata:
+  title: 'Trust Metadata'
+  route_name: entity.trust_metadata.collection
+  base_route: system.admin_content
+  weight: 10
+
+# Trust Schema settings local task
 ucb_trust_schema.settings:
   title: 'Trust Schema'
   route_name: ucb_trust_schema.settings

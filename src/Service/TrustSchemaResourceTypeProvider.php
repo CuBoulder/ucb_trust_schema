@@ -86,15 +86,33 @@ class TrustSchemaResourceTypeProvider {
         'trust_topics',
         'trust_syndication_enabled',
         'node_id',
+        'syndication_consumer_sites',
+        'syndication_total_views',
+        'syndication_consumer_sites_list',
       ];
       
       foreach ($fields as $field) {
+        // Determine field type based on field name
+        $fieldType = 'string';
+        $isComputed = FALSE;
+        
+        if ($field === 'trust_topics') {
+          $fieldType = 'string';
+          $isComputed = TRUE;
+        }
+        elseif (in_array($field, ['syndication_consumer_sites', 'syndication_total_views'])) {
+          $fieldType = 'integer';
+        }
+        elseif ($field === 'syndication_consumer_sites_list') {
+          $fieldType = 'string';
+        }
+        
         $resource_type->addField($field, [
           'fieldName' => $field,
           'publicName' => $field,
           'enabled' => TRUE,
-          'fieldType' => $field === 'trust_topics' ? 'string' : 'string',
-          'isComputed' => $field === 'trust_topics',
+          'fieldType' => $fieldType,
+          'isComputed' => $isComputed,
         ]);
       }
       

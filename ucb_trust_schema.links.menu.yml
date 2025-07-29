@@ -1,9 +1,9 @@
 ucb_trust_schema.overview:
-  title: 'Trust Syndication Overview'
-  description: 'Manage trust metadata for content'
+  title: 'Trust Metadata'
+  description: 'Manage trust metadata and syndication analytics for content.'
   parent: system.admin_content
-  route_name: ucb_trust_schema.overview
-  weight: 10
+  route_name: entity.trust_metadata.collection
+  weight: 5
 
 ucb_trust_schema.settings:
   title: 'Trust Schema'
@@ -11,3 +11,5 @@ ucb_trust_schema.settings:
   parent: system.admin_config_cu_boulder
   route_name: ucb_trust_schema.settings
   weight: 0 
+
+ 

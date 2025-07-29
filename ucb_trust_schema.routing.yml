@@ -94,4 +94,33 @@ ucb_trust_schema.trust_metadata.edit:
       node:
         type: entity:node
       request:
-        type: request 
+        type: request
+
+# Analytics API endpoints
+ucb_trust_schema.api.report_view:
+  path: '/api/trust-schema/{node}/report-view'
+  defaults:
+    _controller: '\Drupal\ucb_trust_schema\Controller\TrustSchemaAnalyticsController::reportView'
+    _title: 'Report View'
+  requirements:
+    _access: 'TRUE'
+    node: \d+
+  methods: [POST]
+  options:
+    parameters:
+      node:
+        type: entity:node
+
+ucb_trust_schema.api.get_analytics:
+  path: '/api/trust-schema/{node}/analytics'
+  defaults:
+    _controller: '\Drupal\ucb_trust_schema\Controller\TrustSchemaAnalyticsController::getAnalytics'
+    _title: 'Get Analytics'
+  requirements:
+    _permission: 'view trust metadata'
+    node: \d+
+  methods: [GET]
+  options:
+    parameters:
+      node:
+        type: entity:node 
