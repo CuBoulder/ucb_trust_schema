@@ -31,8 +31,11 @@ class SyndicatedNodeResourceType extends ResourceType {
       'trust_topics',
       'trust_syndication_enabled',
       'node_summary',
+      'syndication_consumer_sites',
+      'syndication_total_views',
+      'syndication_consumer_sites_list',
     ];
     
     return array_merge($fields, $trust_fields);
   }
-} 
+}
