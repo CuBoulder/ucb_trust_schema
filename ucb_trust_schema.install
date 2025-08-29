@@ -51,6 +51,18 @@ function ucb_trust_schema_schema() {
         'not null' => FALSE,
         'description' => 'Contact information for the content maintainer.',
       ],
+      'timeliness' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'description' => 'The timeliness of the content (evergreen, semester-specific, etc.).',
+      ],
+      'audience' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'description' => 'The target audience for the content.',
+      ],
       'trust_syndication_enabled' => [
         'type' => 'int',
         'size' => 'tiny',
@@ -87,6 +99,8 @@ function ucb_trust_schema_schema() {
       'node_id' => ['node_id'],
       'trust_role' => ['trust_role'],
       'trust_scope' => ['trust_scope'],
+      'timeliness' => ['timeliness'],
+      'audience' => ['audience'],
       'trust_syndication_enabled' => ['trust_syndication_enabled'],
     ],
   ];
@@ -100,22 +114,37 @@ function ucb_trust_schema_schema() {
 function ucb_trust_schema_install() {
   // Create default trust topics
   $topics = [
-    'Mathematics' => 'Mathematics and related fields',
-    'Science' => 'Natural sciences and related fields',
-    'Arts' => 'Arts and humanities',
-    'Engineering' => 'Engineering and technology',
-    'Business' => 'Business and economics',
-    'Education' => 'Education and teaching',
-    'Health' => 'Health and medicine',
-    'Law' => 'Law and legal studies',
-    'Social Sciences' => 'Social sciences and human behavior',
-    'Computer Science' => 'Computer science and information technology',
-    'Registration' => 'Student registration and enrollment',
-    'Commencement' => 'Graduation and commencement ceremonies',
-    'Financial Aid' => 'Financial aid, scholarships, and student funding',
-    'Admissions' => 'Undergraduate and graduate admissions',
-    'Student Life' => 'Student life, housing, and campus activities',
-    'Research' => 'Research, grants, and academic projects',
+    'Academic support' => '',
+    'Accessibility' => 'Compliance, Digital, Accommodations',
+    'Admissions' => '',
+    'Advising' => '',
+    'Alumni' => '',
+    'Arts & culture' => 'Museums',
+    'Campus resources' => '',
+    'Career' => '',
+    'Deadlines' => 'Tuition, Application, Withdraw, Add/Drop, etc.',
+    'Degree requirements' => '',
+    'Dining' => '',
+    'Employment' => '',
+    'Enrollment' => '',
+    'Events' => 'Homecoming, Conference of World Affairs',
+    'Facilities' => '',
+    'Financial aid' => 'Grants, Scholarships',
+    'Graduation' => '',
+    'Health' => '',
+    'Housing' => '',
+    'Policy' => '',
+    'Records' => '',
+    'Recruitment' => '',
+    'Registration' => '',
+    'Research' => '',
+    'Safety' => '',
+    'Sports' => '',
+    'Student organizations' => '',
+    'Support services' => '',
+    'Sustainability' => '',
+    'Parking & transportation' => '',
+    'Technology' => '',
   ];
 
   foreach ($topics as $name => $description) {
@@ -135,460 +164,3 @@ function ucb_trust_schema_install() {
 function ucb_trust_schema_uninstall() {
   // No longer need to drop the custom table as we're using entities
 }
-
-/**
- * Update to convert existing fields to table storage.
- */
-function ucb_trust_schema_update_9001() {
-  $old_fields = [
-    'trust_role',
-    'trust_scope',
-    'trust_contact',
-    'trust_topics',
-    'trust_syndication_enabled'
-  ];
-
-  // Migrate data from old fields to new table
-  $query = \Drupal::entityQuery('node')
-    ->condition('type', 'article')
-    ->accessCheck(FALSE);
-  $nids = $query->execute();
-
-  foreach ($nids as $nid) {
-    $node = \Drupal\node\Entity\Node::load($nid);
-    if (!$node) {
-      continue;
-    }
-
-    $trust_metadata = [
-      'nid' => $nid,
-      'uuid' => \Drupal::service('uuid')->generate(),
-      'trust_role' => '',
-      'trust_scope' => '',
-      'trust_contact' => '',
-      'trust_topics' => '[]',
-      'trust_syndication_enabled' => 0,
-      'created' => \Drupal::time()->getRequestTime(),
-      'changed' => \Drupal::time()->getRequestTime(),
-    ];
-
-    foreach ($old_fields as $field_name) {
-      if ($node->hasField($field_name) && !$node->get($field_name)->isEmpty()) {
-        if ($field_name === 'trust_topics') {
-          $trust_metadata[$field_name] = json_encode($node->get($field_name)->getValue());
-        }
-        else {
-          $trust_metadata[$field_name] = $node->get($field_name)->value;
-        }
-      }
-    }
-
-    \Drupal::database()->merge('trust_metadata')
-      ->key(['nid' => $nid])
-      ->fields($trust_metadata)
-      ->execute();
-  }
-}
-
-/**
- * Migrate data from custom table to entity type.
- */
-function ucb_trust_schema_update_9002() {
-  $database = \Drupal::database();
-  
-  // Check if the old table exists
-  if (!$database->schema()->tableExists('trust_metadata')) {
-    return;
-  }
-
-  // Get all records from the old table
-  $records = $database->select('trust_metadata', 'tm')
-    ->fields('tm')
-    ->execute()
-    ->fetchAll();
-
-  foreach ($records as $record) {
-    // Create new entity
-    $trust_metadata = TrustMetadata::create([
-      'node_id' => $record->nid,
-      'trust_role' => $record->trust_role,
-      'trust_scope' => $record->trust_scope,
-      'trust_contact' => $record->trust_contact,
-      'trust_syndication_enabled' => (bool) $record->trust_syndication_enabled,
-    ]);
-
-    // Handle trust topics
-    if (!empty($record->trust_topics)) {
-      $topic_ids = json_decode($record->trust_topics, TRUE);
-      if (!empty($topic_ids)) {
-        $trust_metadata->set('trust_topics', $topic_ids);
-      }
-    }
-
-    try {
-      $trust_metadata->save();
-    }
-    catch (\Exception $e) {
-      \Drupal::logger('ucb_trust_schema')->error('Failed to migrate trust metadata for node @nid: @error', [
-        '@nid' => $record->nid,
-        '@error' => $e->getMessage(),
-      ]);
-    }
-  }
-
-  // Drop the old table
-  $database->schema()->dropTable('trust_metadata');
-}
-
-/**
- * Create trust metadata entities for all existing nodes.
- */
-function ucb_trust_schema_update_9004() {
-  // Get all nodes
-  $query = \Drupal::entityQuery('node')
-    ->accessCheck(FALSE);
-  $nids = $query->execute();
-
-  foreach ($nids as $nid) {
-    // Check if trust metadata already exists for this node
-    $existing = \Drupal::entityQuery('trust_metadata')
-      ->condition('node_id', $nid)
-      ->accessCheck(FALSE)
-      ->execute();
-
-    if (empty($existing)) {
-      // Create new trust metadata entity
-      $trust_metadata = TrustMetadata::create([
-        'node_id' => $nid,
-        'trust_role' => '',
-        'trust_scope' => '',
-        'trust_contact' => '',
-        'trust_syndication_enabled' => FALSE,
-      ]);
-
-      try {
-        $trust_metadata->save();
-        \Drupal::logger('ucb_trust_schema')->notice('Created trust metadata for node @nid', ['@nid' => $nid]);
-      }
-      catch (\Exception $e) {
-        \Drupal::logger('ucb_trust_schema')->error('Failed to create trust metadata for node @nid: @error', [
-          '@nid' => $nid,
-          '@error' => $e->getMessage(),
-        ]);
-      }
-    }
-  }
-}
-
-/**
- * Create default trust topics.
- */
-function ucb_trust_schema_update_9005() {
-  $topics = [
-    'Mathematics' => 'Mathematics and related fields',
-    'Science' => 'Natural sciences and related fields',
-    'Arts' => 'Arts and humanities',
-    'Engineering' => 'Engineering and technology',
-    'Business' => 'Business and economics',
-    'Education' => 'Education and teaching',
-    'Health' => 'Health and medicine',
-    'Law' => 'Law and legal studies',
-    'Social Sciences' => 'Social sciences and human behavior',
-    'Computer Science' => 'Computer science and information technology',
-    'Registration' => 'Student registration and enrollment',
-    'Commencement' => 'Graduation and commencement ceremonies',
-    'Financial Aid' => 'Financial aid, scholarships, and student funding',
-    'Admissions' => 'Undergraduate and graduate admissions',
-    'Student Life' => 'Student life, housing, and campus activities',
-    'Research' => 'Research, grants, and academic projects',
-  ];
-
-  foreach ($topics as $name => $description) {
-    // Check if term already exists
-    $existing = \Drupal::entityQuery('taxonomy_term')
-      ->condition('vid', 'trust_topics')
-      ->condition('name', $name)
-      ->accessCheck(FALSE)
-      ->execute();
-
-    if (empty($existing)) {
-      $term = Term::create([
-        'vid' => 'trust_topics',
-        'name' => $name,
-        'description' => $description,
-        'weight' => 0,
-      ]);
-      $term->save();
-      \Drupal::logger('ucb_trust_schema')->notice('Created trust topic: @name', ['@name' => $name]);
-    }
-  }
-} 
-
-/**
- * Update to convert existing fields to table storage.
- */
-function ucb_trust_schema_update_8001() {
-  // This update is no longer needed as we're using entities
-}
-
-/**
- * Add syndication analytics fields to trust_metadata table.
- */
-function ucb_trust_schema_update_8002() {
-  $database = \Drupal::database();
-  
-  // Check if the fields already exist
-  $schema = $database->schema();
-  
-  if (!$schema->fieldExists('trust_metadata', 'syndication_consumer_sites')) {
-    $schema->addField('trust_metadata', 'syndication_consumer_sites', [
-      'type' => 'int',
-      'size' => 'normal',
-      'not null' => TRUE,
-      'default' => 0,
-      'description' => 'Number of sites consuming this content.',
-    ]);
-  }
-  
-  if (!$schema->fieldExists('trust_metadata', 'syndication_total_views')) {
-    $schema->addField('trust_metadata', 'syndication_total_views', [
-      'type' => 'int',
-      'size' => 'normal',
-      'not null' => TRUE,
-      'default' => 0,
-      'description' => 'Total number of views across all consumer sites.',
-    ]);
-  }
-  
-  if (!$schema->fieldExists('trust_metadata', 'syndication_consumer_sites_list')) {
-    $schema->addField('trust_metadata', 'syndication_consumer_sites_list', [
-      'type' => 'text',
-      'size' => 'big',
-      'not null' => FALSE,
-      'description' => 'List of sites consuming this content.',
-    ]);
-  }
-  
-  \Drupal::messenger()->addStatus(t('Added syndication analytics fields to trust_metadata table.'));
-}
-
-/**
- * Update JSON:API resource type provider to include analytics fields.
- */
-function ucb_trust_schema_update_8003() {
-  // Clear the JSON:API resource type cache to ensure our changes take effect
-  \Drupal::service('jsonapi.resource_type.repository')->reset();
-  
-  // Clear the entity type cache to ensure field definitions are updated
-  \Drupal::entityTypeManager()->clearCachedDefinitions();
-  
-  // Clear the cache to ensure all changes are applied
-  \Drupal::service('cache.discovery')->deleteAll();
-  
-  \Drupal::messenger()->addStatus(t('Updated JSON:API resource type provider to include syndication analytics fields.'));
-}
-
-/**
- * Comprehensive update for syndication analytics system.
- */
-function ucb_trust_schema_update_8004() {
-  $messenger = \Drupal::messenger();
-  $logger = \Drupal::logger('ucb_trust_schema');
-  
-  try {
-    // 1. Ensure the database table has the correct schema
-    $database = \Drupal::database();
-    $schema = $database->schema();
-    
-    // Check and add analytics fields if they don't exist
-    $fields_to_add = [
-      'syndication_consumer_sites' => [
-        'type' => 'int',
-        'size' => 'normal',
-        'not null' => TRUE,
-        'default' => 0,
-        'description' => 'Number of sites consuming this content.',
-      ],
-      'syndication_total_views' => [
-        'type' => 'int',
-        'size' => 'normal',
-        'not null' => TRUE,
-        'default' => 0,
-        'description' => 'Total number of views across all consumer sites.',
-      ],
-      'syndication_consumer_sites_list' => [
-        'type' => 'text',
-        'size' => 'big',
-        'not null' => FALSE,
-        'description' => 'List of sites consuming this content.',
-      ],
-    ];
-    
-    foreach ($fields_to_add as $field_name => $field_spec) {
-      if (!$schema->fieldExists('trust_metadata', $field_name)) {
-        $schema->addField('trust_metadata', $field_name, $field_spec);
-        $logger->info('Added field @field to trust_metadata table', ['@field' => $field_name]);
-      }
-    }
-    
-    // 2. Clear all relevant caches
-    \Drupal::service('jsonapi.resource_type.repository')->reset();
-    \Drupal::entityTypeManager()->clearCachedDefinitions();
-    \Drupal::service('cache.discovery')->deleteAll();
-    \Drupal::service('cache.entity')->deleteAll();
-    \Drupal::service('cache.render')->deleteAll();
-    
-    // 3. Verify the analytics service is properly registered
-    $container = \Drupal::getContainer();
-    if (!$container->has('ucb_trust_schema.analytics')) {
-      $logger->warning('Analytics service not found in container');
-    } else {
-      $logger->info('Analytics service is properly registered');
-    }
-    
-    // 4. Check if routes are properly registered
-    $route_provider = \Drupal::service('router.route_provider');
-    $analytics_routes = [
-      'ucb_trust_schema.api.report_view',
-      'ucb_trust_schema.api.get_analytics',
-    ];
-    
-    foreach ($analytics_routes as $route_name) {
-      try {
-        $routes = $route_provider->getRoutesByNames([$route_name]);
-        if (empty($routes)) {
-          $logger->warning('Analytics route @route not found', ['@route' => $route_name]);
-        } else {
-          $logger->info('Analytics route @route is properly registered', ['@route' => $route_name]);
-        }
-      } catch (\Exception $e) {
-        $logger->warning('Error checking route @route: @error', ['@route' => $route_name, '@error' => $e->getMessage()]);
-      }
-    }
-    
-    // 5. Test JSON:API field exposure
-    $resource_type_repository = \Drupal::service('jsonapi.resource_type.repository');
-    try {
-      $trust_metadata_type = $resource_type_repository->get('trust_metadata', 'trust_metadata');
-      $public_fields = $trust_metadata_type->getPublicFieldNames();
-      
-      $expected_analytics_fields = [
-        'syndication_consumer_sites',
-        'syndication_total_views',
-        'syndication_consumer_sites_list',
-      ];
-      
-      foreach ($expected_analytics_fields as $field) {
-        if (in_array($field, $public_fields)) {
-          $logger->info('Analytics field @field is exposed via JSON:API', ['@field' => $field]);
-        } else {
-          $logger->warning('Analytics field @field is NOT exposed via JSON:API', ['@field' => $field]);
-        }
-      }
-    } catch (\Exception $e) {
-      $logger->error('Error checking JSON:API resource type: @error', ['@error' => $e->getMessage()]);
-    }
-    
-    $messenger->addStatus(t('Syndication analytics system has been successfully updated. Check the logs for detailed information.'));
-    
-  } catch (\Exception $e) {
-    $logger->error('Error during analytics system update: @error', ['@error' => $e->getMessage()]);
-    $messenger->addError(t('Error updating syndication analytics system: @error', ['@error' => $e->getMessage()]));
-  }
-}
-
-/**
- * Test and verify syndication analytics system functionality.
- */
-function ucb_trust_schema_update_8005() {
-  $messenger = \Drupal::messenger();
-  $logger = \Drupal::logger('ucb_trust_schema');
-  
-  try {
-    // Test JSON:API endpoint accessibility
-    $base_url = \Drupal::request()->getSchemeAndHttpHost();
-    $test_url = $base_url . '/jsonapi/trust_metadata/trust_metadata?fields[trust_metadata--trust_metadata]=syndication_consumer_sites,syndication_total_views,syndication_consumer_sites_list&page[limit]=1';
-    
-    $logger->info('Testing JSON:API endpoint: @url', ['@url' => $test_url]);
-    
-    // Test analytics API endpoint
-    $analytics_test_url = $base_url . '/api/trust-schema/3/analytics';
-    $logger->info('Testing analytics API endpoint: @url', ['@url' => $analytics_test_url]);
-    
-    // Check database for analytics data
-    $database = \Drupal::database();
-    $result = $database->select('trust_metadata', 'tm')
-      ->fields('tm', ['id', 'node_id', 'syndication_consumer_sites', 'syndication_total_views', 'syndication_consumer_sites_list'])
-      ->condition('syndication_consumer_sites', 0, '>')
-      ->range(0, 5)
-      ->execute()
-      ->fetchAll();
-    
-    if (!empty($result)) {
-      $logger->info('Found @count trust_metadata records with analytics data', ['@count' => count($result)]);
-      foreach ($result as $record) {
-        $logger->info('Node @nid: @sites sites, @views views, sites: @sites_list', [
-          '@nid' => $record->node_id,
-          '@sites' => $record->syndication_consumer_sites,
-          '@views' => $record->syndication_total_views,
-          '@sites_list' => $record->syndication_consumer_sites_list ?: 'none',
-        ]);
-      }
-    } else {
-      $logger->info('No trust_metadata records found with analytics data');
-    }
-    
-    // Verify admin interface columns
-    $messenger->addStatus(t('Syndication analytics system verification complete. Check the logs for detailed test results.'));
-    
-  } catch (\Exception $e) {
-    $logger->error('Error during analytics system verification: @error', ['@error' => $e->getMessage()]);
-    $messenger->addError(t('Error verifying syndication analytics system: @error', ['@error' => $e->getMessage()]));
-  }
-}
-
-/**
- * Update menu link for Trust Metadata admin page.
- */
-function ucb_trust_schema_update_8006() {
-  $messenger = \Drupal::messenger();
-  $logger = \Drupal::logger('ucb_trust_schema');
-  
-  try {
-    // Clear menu cache to ensure menu changes take effect
-    \Drupal::service('plugin.manager.menu.link')->rebuild();
-    
-    // Clear cache to ensure all changes are applied
-    \Drupal::service('cache.discovery')->deleteAll();
-    
-    $logger->info('Updated Trust Metadata menu link in admin/content menu');
-    $messenger->addStatus(t('Trust Metadata menu link has been updated in the Content administration menu.'));
-    
-  } catch (\Exception $e) {
-    $logger->error('Error updating Trust Metadata menu link: @error', ['@error' => $e->getMessage()]);
-    $messenger->addError(t('Error updating Trust Metadata menu link: @error', ['@error' => $e->getMessage()]));
-  }
-}
-
-/**
- * Add Trust Metadata local task to admin/content primary tabs.
- */
-function ucb_trust_schema_update_8007() {
-  $messenger = \Drupal::messenger();
-  $logger = \Drupal::logger('ucb_trust_schema');
-  
-  try {
-    // Clear local task cache to ensure new local task is registered
-    \Drupal::service('plugin.manager.menu.local_task')->clearCachedDefinitions();
-    
-    // Clear cache to ensure all changes are applied
-    \Drupal::service('cache.discovery')->deleteAll();
-    
-    $logger->info('Added Trust Metadata local task to admin/content primary tabs');
-    $messenger->addStatus(t('Trust Metadata tab has been added to the Content administration page.'));
-    
-  } catch (\Exception $e) {
-    $logger->error('Error adding Trust Metadata local task: @error', ['@error' => $e->getMessage()]);
-    $messenger->addError(t('Error adding Trust Metadata local task: @error', ['@error' => $e->getMessage()]));
-  }
-} 

@@ -290,6 +290,8 @@ class TrustSyndicationController extends ControllerBase {
           'type' => $this->nodeTypeStorage->load($node->type)->label(),
           'trust_role' => $trust_metadata['trust_role'] ?? '',
           'trust_scope' => $trust_metadata['trust_scope'] ?? '',
+          'timeliness' => $trust_metadata['timeliness'] ?? '',
+          'audience' => $trust_metadata['audience'] ?? '',
           'trust_contact' => $trust_metadata['trust_contact'] ?? '',
           'syndication_status' => [
             'data' => [
@@ -327,6 +329,8 @@ class TrustSyndicationController extends ControllerBase {
         $this->t('Content type'),
         $this->t('Trust Role'),
         $this->t('Trust Scope'),
+        $this->t('Timeliness'),
+        $this->t('Audience'),
         $this->t('Maintainer Contact'),
         $this->t('Syndication Status'),
         $this->t('Operations'),

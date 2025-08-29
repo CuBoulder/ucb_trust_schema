@@ -6,7 +6,6 @@ dependencies:
 _core:
   default_config_hash: 1234567890
 vid: trust_topics
-name: 'Arts'
-description: 'Arts and humanities'
-weight: 2
-parent: [] 
+name: 'Housing'
+weight: 18
+parent: []

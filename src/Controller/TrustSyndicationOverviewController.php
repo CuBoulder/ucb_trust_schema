@@ -107,6 +107,12 @@ class TrustSyndicationOverviewController extends ControllerBase {
       if (!empty($filters['trust_scope']) && $metadata['trust_scope'] !== $filters['trust_scope']) {
         continue;
       }
+      if (!empty($filters['timeliness']) && $metadata['timeliness'] !== $filters['timeliness']) {
+        continue;
+      }
+      if (!empty($filters['audience']) && $metadata['audience'] !== $filters['audience']) {
+        continue;
+      }
       if (!empty($filters['trust_contact']) && stripos($metadata['trust_contact'], $filters['trust_contact']) === FALSE) {
         continue;
       }
@@ -144,6 +150,14 @@ class TrustSyndicationOverviewController extends ControllerBase {
         case 'trust_scope':
           $value_a = $a['metadata']['trust_scope'] ?? '';
           $value_b = $b['metadata']['trust_scope'] ?? '';
+          break;
+        case 'timeliness':
+          $value_a = $a['metadata']['timeliness'] ?? '';
+          $value_b = $b['metadata']['timeliness'] ?? '';
+          break;
+        case 'audience':
+          $value_a = $a['metadata']['audience'] ?? '';
+          $value_b = $b['metadata']['audience'] ?? '';
           break;
         case 'trust_contact':
           $value_a = $a['metadata']['trust_contact'] ?? '';
@@ -193,6 +207,12 @@ class TrustSyndicationOverviewController extends ControllerBase {
       ];
       $row['trust_scope'] = [
         'data' => $metadata['trust_scope'] ?? '',
+      ];
+      $row['timeliness'] = [
+        'data' => $metadata['timeliness'] ?? '',
+      ];
+      $row['audience'] = [
+        'data' => $metadata['audience'] ?? '',
       ];
       $row['trust_contact'] = [
         'data' => $metadata['trust_contact'] ?? '',
@@ -250,6 +270,14 @@ class TrustSyndicationOverviewController extends ControllerBase {
       'trust_scope' => [
         'data' => $this->t('Trust Scope'),
         'field' => 'trust_scope',
+      ],
+      'timeliness' => [
+        'data' => $this->t('Timeliness'),
+        'field' => 'timeliness',
+      ],
+      'audience' => [
+        'data' => $this->t('Audience'),
+        'field' => 'audience',
       ],
       'trust_contact' => [
         'data' => $this->t('Maintainer Contact'),

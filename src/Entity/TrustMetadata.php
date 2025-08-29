@@ -126,9 +126,56 @@ class TrustMetadata extends ContentEntityBase implements ContentEntityInterface 
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
+    $fields['timeliness'] = BaseFieldDefinition::create('list_string')
+      ->setLabel(t('Timeliness'))
+      ->setDescription(t('The timeliness of the content (evergreen, semester-specific, etc.).'))
+      ->setSettings([
+        'allowed_values' => [
+          'evergreen' => 'Evergreen',
+          'fall_semester' => 'Fall Semester',
+          'spring_semester' => 'Spring Semester',
+          'summer_semester' => 'Summer Semester',
+          'winter_semester' => 'Winter Semester',
+        ],
+      ])
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'list_default',
+        'weight' => -1.5,
+      ])
+      ->setDisplayOptions('form', [
+        'type' => 'options_select',
+        'weight' => -1.5,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
+    $fields['audience'] = BaseFieldDefinition::create('list_string')
+      ->setLabel(t('Audience'))
+      ->setDescription(t('The target audience for the content.'))
+      ->setSettings([
+        'allowed_values' => [
+          'students' => 'Students',
+          'faculty' => 'Faculty',
+          'staff' => 'Staff',
+          'alumni' => 'Alumni',
+        ],
+      ])
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'list_default',
+        'weight' => -1.4,
+      ])
+      ->setDisplayOptions('form', [
+        'type' => 'options_select',
+        'weight' => -1.4,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
     $fields['trust_topics'] = BaseFieldDefinition::create('entity_reference')
-      ->setLabel(t('Trust Topics'))
-      ->setDescription(t('The trust topics associated with this content.'))
+      ->setLabel(t('Subjects'))
+      ->setDescription(t('The trust subject associated with this content.'))
       ->setSetting('target_type', 'taxonomy_term')
       ->setCardinality(BaseFieldDefinition::CARDINALITY_UNLIMITED)
       ->setDisplayOptions('view', [

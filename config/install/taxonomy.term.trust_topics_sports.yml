@@ -6,7 +6,6 @@ dependencies:
 _core:
   default_config_hash: 1234567890
 vid: trust_topics
-name: 'Mathematics'
-description: 'Mathematics and related fields'
-weight: 0
-parent: [] 
+name: 'Sports'
+weight: 25
+parent: []

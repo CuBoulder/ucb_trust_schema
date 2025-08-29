@@ -28,6 +28,8 @@ class SyndicatedNodeResourceType extends ResourceType {
       'trust_role',
       'trust_scope',
       'trust_contact',
+      'timeliness',
+      'audience',
       'trust_topics',
       'trust_syndication_enabled',
       'node_summary',

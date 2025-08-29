@@ -1,0 +1,12 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.trust_topics
+_core:
+  default_config_hash: 1234567890
+vid: trust_topics
+name: 'Accessibility'
+description: 'Compliance, Digital, Accommodations'
+weight: 1
+parent: []

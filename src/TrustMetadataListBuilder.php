@@ -21,7 +21,9 @@ class TrustMetadataListBuilder extends EntityListBuilder {
     $header['node'] = $this->t('Node');
     $header['trust_role'] = $this->t('Trust Role');
     $header['trust_scope'] = $this->t('Trust Scope');
-    $header['trust_topics'] = $this->t('Trust Topics');
+    $header['timeliness'] = $this->t('Timeliness');
+    $header['audience'] = $this->t('Audience');
+    $header['trust_topics'] = $this->t('Subjects');
     $header['trust_syndication_enabled'] = $this->t('Syndication Enabled');
     $header['consumer_sites'] = $this->t('Consumer Sites');
     $header['total_views'] = $this->t('Total Views');
@@ -37,6 +39,8 @@ class TrustMetadataListBuilder extends EntityListBuilder {
     $row['node'] = $entity->get('node_id')->entity ? $entity->get('node_id')->entity->toLink() : '';
     $row['trust_role'] = $entity->get('trust_role')->value;
     $row['trust_scope'] = $entity->get('trust_scope')->value;
+    $row['timeliness'] = $entity->get('timeliness')->value ?: '';
+    $row['audience'] = $entity->get('audience')->value ?: '';
     $topics = [];
     foreach ($entity->get('trust_topics') as $topic) {
       if ($topic->entity) {
@@ -78,6 +82,12 @@ class TrustMetadataListBuilder extends EntityListBuilder {
     }
     if (!empty($params['trust_scope'])) {
       $query->condition('trust_scope', $params['trust_scope']);
+    }
+    if (!empty($params['timeliness'])) {
+      $query->condition('timeliness', $params['timeliness']);
+    }
+    if (!empty($params['audience'])) {
+      $query->condition('audience', $params['audience']);
     }
     if (!empty($params['trust_topics'])) {
       $query->condition('trust_topics', $params['trust_topics']);

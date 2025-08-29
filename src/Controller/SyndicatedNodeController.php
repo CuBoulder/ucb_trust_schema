@@ -231,6 +231,8 @@ class SyndicatedNodeController extends ControllerBase {
             'summary' => $summary,
             'trust_role' => $trust_metadata->get('trust_role')->value,
             'trust_scope' => $trust_metadata->get('trust_scope')->value,
+            'timeliness' => $trust_metadata->get('timeliness')->value,
+            'audience' => $trust_metadata->get('audience')->value,
             'trust_contact' => $trust_contacts,
             'trust_topics' => $trust_topics,
             'trust_syndication_enabled' => $trust_metadata->get('trust_syndication_enabled')->value,

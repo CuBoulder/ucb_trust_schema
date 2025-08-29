@@ -47,6 +47,33 @@ class TrustMetadataFilterForm extends FormBase {
       '#default_value' => $query['trust_scope'] ?? '',
     ];
 
+    $form['timeliness'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Timeliness'),
+      '#options' => [
+        '' => $this->t('- Any -'),
+        'evergreen' => $this->t('Evergreen'),
+        'fall_semester' => $this->t('Fall Semester'),
+        'spring_semester' => $this->t('Spring Semester'),
+        'summer_semester' => $this->t('Summer Semester'),
+        'winter_semester' => $this->t('Winter Semester'),
+      ],
+      '#default_value' => $query['timeliness'] ?? '',
+    ];
+
+    $form['audience'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Audience'),
+      '#options' => [
+        '' => $this->t('- Any -'),
+        'students' => $this->t('Students'),
+        'faculty' => $this->t('Faculty'),
+        'staff' => $this->t('Staff'),
+        'alumni' => $this->t('Alumni'),
+      ],
+      '#default_value' => $query['audience'] ?? '',
+    ];
+
     // Get all trust topics.
     $topic_options = ['' => $this->t('- Any -')];
     $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree('trust_topics');
@@ -55,7 +82,7 @@ class TrustMetadataFilterForm extends FormBase {
     }
     $form['trust_topics'] = [
       '#type' => 'select',
-      '#title' => $this->t('Trust Topic'),
+      '#title' => $this->t('Subjects'),
       '#options' => $topic_options,
       '#default_value' => $query['trust_topics'] ?? '',
     ];
@@ -94,6 +121,8 @@ class TrustMetadataFilterForm extends FormBase {
     foreach ([
       'trust_role',
       'trust_scope',
+      'timeliness',
+      'audience',
       'trust_topics',
       'trust_syndication_enabled',
     ] as $key) {

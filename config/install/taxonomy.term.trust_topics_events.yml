@@ -1,0 +1,12 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.trust_topics
+_core:
+  default_config_hash: 1234567890
+vid: trust_topics
+name: 'Events'
+description: 'Homecoming, Conference of World Affairs'
+weight: 13
+parent: []

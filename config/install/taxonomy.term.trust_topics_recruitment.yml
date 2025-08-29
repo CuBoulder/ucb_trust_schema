@@ -6,7 +6,6 @@ dependencies:
 _core:
   default_config_hash: 1234567890
 vid: trust_topics
-name: 'Science'
-description: 'Natural sciences and related fields'
-weight: 1
-parent: [] 
+name: 'Recruitment'
+weight: 21
+parent: []

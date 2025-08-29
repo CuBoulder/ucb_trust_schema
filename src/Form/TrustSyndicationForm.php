@@ -30,6 +30,8 @@ class TrustSyndicationForm extends FormBase {
       'trust_role' => '',
       'trust_scope' => '',
       'trust_contact' => '',
+      'timeliness' => '',
+      'audience' => '',
       'trust_topics' => [],
       'trust_syndication_enabled' => FALSE,
     ];
@@ -65,6 +67,35 @@ class TrustSyndicationForm extends FormBase {
       '#required' => FALSE,
       '#maxlength' => 255,
       '#default_value' => $trust_metadata['trust_contact'],
+    ];
+
+    $form['timeliness'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Timeliness'),
+      '#required' => FALSE,
+      '#options' => [
+        '' => $this->t('- Select -'),
+        'evergreen' => $this->t('Evergreen'),
+        'fall_semester' => $this->t('Fall Semester'),
+        'spring_semester' => $this->t('Spring Semester'),
+        'summer_semester' => $this->t('Summer Semester'),
+        'winter_semester' => $this->t('Winter Semester'),
+      ],
+      '#default_value' => $trust_metadata['timeliness'],
+    ];
+
+    $form['audience'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Audience'),
+      '#required' => FALSE,
+      '#options' => [
+        '' => $this->t('- Select -'),
+        'students' => $this->t('Students'),
+        'faculty' => $this->t('Faculty'),
+        'staff' => $this->t('Staff'),
+        'alumni' => $this->t('Alumni'),
+      ],
+      '#default_value' => $trust_metadata['audience'],
     ];
 
     $form['trust_syndication_enabled'] = [
@@ -106,6 +137,8 @@ class TrustSyndicationForm extends FormBase {
       'trust_role' => $form_state->getValue('trust_role'),
       'trust_scope' => $form_state->getValue('trust_scope'),
       'trust_contact' => $form_state->getValue('trust_contact'),
+      'timeliness' => $form_state->getValue('timeliness'),
+      'audience' => $form_state->getValue('audience'),
       'trust_syndication_enabled' => $form_state->getValue('trust_syndication_enabled'),
     ];
     

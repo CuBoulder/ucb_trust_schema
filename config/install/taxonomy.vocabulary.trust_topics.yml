@@ -3,7 +3,7 @@ status: true
 dependencies: {  }
 _core:
   default_config_hash: 1234567890
-name: 'Trust Topics'
+name: 'Trust Subjects'
 vid: trust_topics
 description: 'Academic topics for trust metadata'
 weight: 0 
