@@ -64,6 +64,13 @@ class TrustSchemaJsonApiService {
    *   The trust metadata entity.
    */
   public function alterTrustMetadataFieldValue(&$field_value, $field_name, $entity) {
+    // Handle content_authority field specially
+    if ($field_name === 'content_authority') {
+      $field_value = $this->getContentAuthority();
+      \Drupal::logger('ucb_trust_schema')->debug('Content authority set via service to: @value', ['@value' => $field_value]);
+      return;
+    }
+
     // For trust_metadata entities, we can directly access the field values
     // since they're stored as entity fields
     if ($entity->hasField($field_name)) {
@@ -87,5 +94,35 @@ class TrustSchemaJsonApiService {
     
     // Add the condition to the main query
     $query->condition('node.nid', $subquery, 'IN');
+  }
+
+  /**
+   * Gets the content authority from site configuration.
+   *
+   * @return string
+   *   The content authority label.
+   */
+  public function getContentAuthority() {
+    if (\Drupal::moduleHandler()->moduleExists('ucb_site_configuration')) {
+      $settings = \Drupal::config('ucb_site_configuration.settings');
+      $site_affiliation = $settings->get('site_affiliation');
+      
+      if ($site_affiliation === 'custom') {
+        // For custom affiliation, use the custom label
+        $site_affiliation_label = $settings->get('site_affiliation_label');
+        if (!empty($site_affiliation_label)) {
+          return $site_affiliation_label;
+        }
+      }
+      elseif (!empty($site_affiliation)) {
+        // For predefined affiliations, get the label from configuration
+        $site_affiliation_label = \ucb_trust_schema_get_site_affiliation_label($site_affiliation);
+        if ($site_affiliation_label) {
+          return $site_affiliation_label;
+        }
+      }
+    }
+    
+    return '';
   }
 } 

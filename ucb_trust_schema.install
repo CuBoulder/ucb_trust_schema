@@ -90,6 +90,18 @@ function ucb_trust_schema_schema() {
         'not null' => FALSE,
         'description' => 'List of sites consuming this content.',
       ],
+      'site_affiliation' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'description' => 'The site affiliation for content authority (automatically set from site configuration).',
+      ],
+      'content_authority' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'description' => 'The content authority from site affiliation.',
+      ],
     ],
     'primary key' => ['id'],
     'unique keys' => [
@@ -102,6 +114,8 @@ function ucb_trust_schema_schema() {
       'timeliness' => ['timeliness'],
       'audience' => ['audience'],
       'trust_syndication_enabled' => ['trust_syndication_enabled'],
+      'site_affiliation' => ['site_affiliation'],
+      'content_authority' => ['content_authority'],
     ],
   ];
 
@@ -159,8 +173,25 @@ function ucb_trust_schema_install() {
 }
 
 /**
- * Implements hook_uninstall().
+ * Add content_authority column to trust_metadata table.
  */
-function ucb_trust_schema_uninstall() {
-  // No longer need to drop the custom table as we're using entities
+function ucb_trust_schema_update_8003() {
+  $schema = Database::getConnection()->schema();
+  
+  if (!$schema->fieldExists('trust_metadata', 'content_authority')) {
+    $field_spec = [
+      'type' => 'varchar',
+      'length' => 255,
+      'not null' => FALSE,
+      'description' => 'The content authority from site affiliation.',
+    ];
+    
+    $schema->addField('trust_metadata', 'content_authority', $field_spec);
+    
+    // Add index with proper specification
+    $index_spec = [
+      'fields' => ['content_authority' => $field_spec],
+    ];
+    $schema->addIndex('trust_metadata', 'content_authority', ['content_authority'], $index_spec);
+  }
 }

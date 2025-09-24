@@ -196,6 +196,40 @@ class TrustMetadata extends ContentEntityBase implements ContentEntityInterface 
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
+    $fields['site_affiliation'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Site Affiliation'))
+      ->setDescription(t('The site affiliation for content authority (automatically set from site configuration).'))
+      ->setSettings([
+        'max_length' => 255,
+        'text_processing' => 0,
+      ])
+      ->setDefaultValueCallback('Drupal\ucb_trust_schema\Entity\TrustMetadata::getDefaultSiteAffiliation')
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'string',
+        'weight' => -0.5,
+      ])
+      ->setDisplayConfigurable('form', FALSE)
+      ->setDisplayConfigurable('view', TRUE)
+      ->setReadOnly(TRUE);
+
+    $fields['content_authority'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Content Authority'))
+      ->setDescription(t('The content authority from site affiliation.'))
+      ->setSettings([
+        'max_length' => 255,
+        'text_processing' => 0,
+      ])
+      ->setDefaultValueCallback('Drupal\ucb_trust_schema\Entity\TrustMetadata::getDefaultContentAuthority')
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'string',
+        'weight' => -0.4,
+      ])
+      ->setDisplayConfigurable('form', FALSE)
+      ->setDisplayConfigurable('view', TRUE)
+      ->setReadOnly(TRUE);
+
     $fields['trust_syndication_enabled'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Trust Syndication Enabled'))
       ->setDescription(t('Whether trust syndication is enabled.'))
@@ -286,6 +320,73 @@ class TrustMetadata extends ContentEntityBase implements ContentEntityInterface 
       }
     }
     return implode(', ', $emails);
+  }
+
+  /**
+   * Default value callback for 'site_affiliation' field.
+   *
+   * @return string
+   *   The site affiliation from site configuration.
+   */
+  public static function getDefaultSiteAffiliation() {
+    // Check if ucb_site_configuration module is enabled
+    if (\Drupal::moduleHandler()->moduleExists('ucb_site_configuration')) {
+      $settings = \Drupal::config('ucb_site_configuration.settings');
+      $site_affiliation = $settings->get('site_affiliation');
+      
+      if ($site_affiliation === 'custom') {
+        // For custom affiliation, return the custom label
+        return $settings->get('site_affiliation_label') ?? '';
+      }
+      elseif (!empty($site_affiliation)) {
+        // For predefined affiliations, return the key
+        return $site_affiliation;
+      }
+    }
+    
+    return '';
+  }
+
+
+  /**
+   * Default value callback for 'content_authority' field.
+   *
+   * @return string
+   *   The content authority label from site configuration.
+   */
+  public static function getDefaultContentAuthority() {
+    // Check if ucb_site_configuration module is enabled
+    if (\Drupal::moduleHandler()->moduleExists('ucb_site_configuration')) {
+      $settings = \Drupal::config('ucb_site_configuration.settings');
+      $site_affiliation = $settings->get('site_affiliation');
+      
+      if ($site_affiliation === 'custom') {
+        // For custom affiliation, use the custom label
+        $site_affiliation_label = $settings->get('site_affiliation_label');
+        if (!empty($site_affiliation_label)) {
+          return $site_affiliation_label;
+        }
+      }
+      elseif (!empty($site_affiliation)) {
+        // For predefined affiliations, get the label from configuration
+        $site_affiliation_label = \ucb_trust_schema_get_site_affiliation_label($site_affiliation);
+        if ($site_affiliation_label) {
+          return $site_affiliation_label;
+        }
+      }
+    }
+    
+    return '';
+  }
+
+  /**
+   * Gets the content authority from site configuration.
+   *
+   * @return string
+   *   The content authority label from site configuration.
+   */
+  public static function getContentAuthority() {
+    return static::getDefaultContentAuthority();
   }
 
 } 

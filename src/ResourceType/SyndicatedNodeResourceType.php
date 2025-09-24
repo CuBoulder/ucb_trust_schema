@@ -36,6 +36,7 @@ class SyndicatedNodeResourceType extends ResourceType {
       'syndication_consumer_sites',
       'syndication_total_views',
       'syndication_consumer_sites_list',
+      'content_authority',
     ];
     
     return array_merge($fields, $trust_fields);
