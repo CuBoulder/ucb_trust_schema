@@ -7,5 +7,4 @@ dependencies:
   - drupal:node
   - drupal:jsonapi
   - drupal:field
-  - drupal:taxonomy
-  - ucb_site_configuration 
+  - drupal:taxonomy 

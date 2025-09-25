@@ -221,27 +221,8 @@ class SyndicatedNodeController extends ControllerBase {
           $trust_contacts = $this->getDefaultTrustContacts();
         }
 
-        // Get content authority from site affiliation (from site configuration)
-        $content_authority = '';
-        if (\Drupal::moduleHandler()->moduleExists('ucb_site_configuration')) {
-          $settings = \Drupal::config('ucb_site_configuration.settings');
-          $site_affiliation = $settings->get('site_affiliation');
-          
-          if ($site_affiliation === 'custom') {
-            // For custom affiliation, use the custom label
-            $site_affiliation_label = $settings->get('site_affiliation_label');
-            if (!empty($site_affiliation_label)) {
-              $content_authority = $site_affiliation_label;
-            }
-          }
-          elseif (!empty($site_affiliation)) {
-            // For predefined affiliations, get the label from configuration
-            $site_affiliation_label = \ucb_trust_schema_get_site_affiliation_label($site_affiliation);
-            if ($site_affiliation_label) {
-              $content_authority = $site_affiliation_label;
-            }
-          }
-        }
+        // Get content authority from site name
+        $content_authority = \ucb_trust_schema_get_site_name();
         
         $data[] = [
           'id' => $node->id(),

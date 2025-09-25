@@ -189,10 +189,10 @@ function ucb_trust_schema_jsonapi_node_field_alter(&$field_value, $field, $entit
  * Implements hook_jsonapi_ENTITY_TYPE_FIELD_NAME_alter().
  */
 function ucb_trust_schema_jsonapi_trust_metadata_field_alter(&$field_value, $field, $entity, $resource_type) {
-  // Debug logging
   \Drupal::logger('ucb_trust_schema')->debug('JSON:API field alter hook called for field: @field', ['@field' => $field->getPublicName()]);
   
   if ($field->getPublicName() === 'content_authority') {
+    // Always set content_authority dynamically from site configuration
     $field_value = \Drupal::service('ucb_trust_schema.jsonapi')->getContentAuthority();
     \Drupal::logger('ucb_trust_schema')->debug('Content authority set to: @value', ['@value' => $field_value]);
   } else {
@@ -252,45 +252,13 @@ function ucb_trust_schema_jsonapi_trust_metadata_filter_access(\Drupal\Core\Enti
 }
 
 /**
- * Get site affiliation options from ucb_site_configuration.
+ * Get site name from system configuration.
  *
- * @return array
- *   Array of site affiliation options with keys as machine names and values as labels.
+ * @return string
+ *   The site name from system.site configuration.
  */
-function ucb_trust_schema_get_site_affiliation_options() {
-  $options = [];
-  
-  // Check if ucb_site_configuration module is enabled
-  if (\Drupal::moduleHandler()->moduleExists('ucb_site_configuration')) {
-    $config = \Drupal::config('ucb_site_configuration.configuration');
-    $site_affiliation_options = $config->get('site_affiliation_options') ?? [];
-    
-    foreach ($site_affiliation_options as $key => $option) {
-      if (isset($option['label'])) {
-        $options[$key] = $option['label'];
-      }
-    }
-  }
-  
-  return $options;
-}
-
-/**
- * Get site affiliation label by key.
- *
- * @param string $key
- *   The site affiliation key.
- *
- * @return string|null
- *   The site affiliation label or NULL if not found.
- */
-function ucb_trust_schema_get_site_affiliation_label($key) {
-  if (empty($key)) {
-    return NULL;
-  }
-  
-  $options = ucb_trust_schema_get_site_affiliation_options();
-  return $options[$key] ?? NULL;
+function ucb_trust_schema_get_site_name() {
+  return \Drupal::config('system.site')->get('name') ?? '';
 }
 
 /**

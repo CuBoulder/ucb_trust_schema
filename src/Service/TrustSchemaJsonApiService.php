@@ -97,32 +97,12 @@ class TrustSchemaJsonApiService {
   }
 
   /**
-   * Gets the content authority from site configuration.
+   * Gets the content authority from site name.
    *
    * @return string
-   *   The content authority label.
+   *   The site name.
    */
   public function getContentAuthority() {
-    if (\Drupal::moduleHandler()->moduleExists('ucb_site_configuration')) {
-      $settings = \Drupal::config('ucb_site_configuration.settings');
-      $site_affiliation = $settings->get('site_affiliation');
-      
-      if ($site_affiliation === 'custom') {
-        // For custom affiliation, use the custom label
-        $site_affiliation_label = $settings->get('site_affiliation_label');
-        if (!empty($site_affiliation_label)) {
-          return $site_affiliation_label;
-        }
-      }
-      elseif (!empty($site_affiliation)) {
-        // For predefined affiliations, get the label from configuration
-        $site_affiliation_label = \ucb_trust_schema_get_site_affiliation_label($site_affiliation);
-        if ($site_affiliation_label) {
-          return $site_affiliation_label;
-        }
-      }
-    }
-    
-    return '';
+    return \ucb_trust_schema_get_site_name();
   }
 } 
