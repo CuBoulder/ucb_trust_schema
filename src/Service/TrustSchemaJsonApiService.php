@@ -64,6 +64,13 @@ class TrustSchemaJsonApiService {
    *   The trust metadata entity.
    */
   public function alterTrustMetadataFieldValue(&$field_value, $field_name, $entity) {
+    // Handle content_authority field specially
+    if ($field_name === 'content_authority') {
+      $field_value = $this->getContentAuthority();
+      \Drupal::logger('ucb_trust_schema')->debug('Content authority set via service to: @value', ['@value' => $field_value]);
+      return;
+    }
+
     // For trust_metadata entities, we can directly access the field values
     // since they're stored as entity fields
     if ($entity->hasField($field_name)) {
@@ -87,5 +94,15 @@ class TrustSchemaJsonApiService {
     
     // Add the condition to the main query
     $query->condition('node.nid', $subquery, 'IN');
+  }
+
+  /**
+   * Gets the content authority from site name.
+   *
+   * @return string
+   *   The site name.
+   */
+  public function getContentAuthority() {
+    return \ucb_trust_schema_get_site_name();
   }
 } 

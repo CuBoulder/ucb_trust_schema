@@ -196,6 +196,25 @@ class TrustMetadata extends ContentEntityBase implements ContentEntityInterface 
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
+
+    $fields['content_authority'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Content Authority'))
+      ->setDescription(t('The content authority from site affiliation.'))
+      ->setSettings([
+        'max_length' => 255,
+        'text_processing' => 0,
+      ])
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'string',
+        'weight' => -0.4,
+      ])
+      ->setDisplayConfigurable('form', FALSE)
+      ->setDisplayConfigurable('view', TRUE)
+      ->setReadOnly(TRUE)
+      ->setComputed(TRUE)
+      ->setClass('\Drupal\ucb_trust_schema\Field\ContentAuthorityFieldAccessor');
+
     $fields['trust_syndication_enabled'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Trust Syndication Enabled'))
       ->setDescription(t('Whether trust syndication is enabled.'))
@@ -286,6 +305,18 @@ class TrustMetadata extends ContentEntityBase implements ContentEntityInterface 
       }
     }
     return implode(', ', $emails);
+  }
+
+
+
+  /**
+   * Gets the content authority from site name.
+   *
+   * @return string
+   *   The site name from system configuration.
+   */
+  public static function getContentAuthority() {
+    return \ucb_trust_schema_get_site_name();
   }
 
 } 

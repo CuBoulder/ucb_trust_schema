@@ -220,6 +220,9 @@ class SyndicatedNodeController extends ControllerBase {
           // Otherwise use default developer contacts
           $trust_contacts = $this->getDefaultTrustContacts();
         }
+
+        // Get content authority from site name
+        $content_authority = \ucb_trust_schema_get_site_name();
         
         $data[] = [
           'id' => $node->id(),
@@ -236,6 +239,7 @@ class SyndicatedNodeController extends ControllerBase {
             'trust_contact' => $trust_contacts,
             'trust_topics' => $trust_topics,
             'trust_syndication_enabled' => $trust_metadata->get('trust_syndication_enabled')->value,
+            'content_authority' => $content_authority,
           ],
         ];
       }

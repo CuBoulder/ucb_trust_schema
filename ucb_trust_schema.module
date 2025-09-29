@@ -189,7 +189,41 @@ function ucb_trust_schema_jsonapi_node_field_alter(&$field_value, $field, $entit
  * Implements hook_jsonapi_ENTITY_TYPE_FIELD_NAME_alter().
  */
 function ucb_trust_schema_jsonapi_trust_metadata_field_alter(&$field_value, $field, $entity, $resource_type) {
-  \Drupal::service('ucb_trust_schema.jsonapi')->alterTrustMetadataFieldValue($field_value, $field->getPublicName(), $entity);
+  \Drupal::logger('ucb_trust_schema')->debug('JSON:API field alter hook called for field: @field', ['@field' => $field->getPublicName()]);
+  
+  if ($field->getPublicName() === 'content_authority') {
+    // Always set content_authority dynamically from site configuration
+    $field_value = \Drupal::service('ucb_trust_schema.jsonapi')->getContentAuthority();
+    \Drupal::logger('ucb_trust_schema')->debug('Content authority set to: @value', ['@value' => $field_value]);
+  } else {
+    \Drupal::service('ucb_trust_schema.jsonapi')->alterTrustMetadataFieldValue($field_value, $field->getPublicName(), $entity);
+  }
+}
+
+/**
+ * Implements hook_jsonapi_ENTITY_TYPE_resource_object_alter().
+ */
+function ucb_trust_schema_jsonapi_trust_metadata_resource_object_alter(\Drupal\jsonapi\JsonApiResource\ResourceObject $resource_object, \Drupal\Core\Entity\EntityInterface $entity, \Drupal\jsonapi\ResourceType\ResourceType $resource_type) {
+  \Drupal::logger('ucb_trust_schema')->debug('JSON:API resource object alter hook called for trust metadata entity @id', ['@id' => $entity->id()]);
+  
+  // Always add content_authority field
+  $content_authority = \Drupal::service('ucb_trust_schema.jsonapi')->getContentAuthority();
+  $resource_object->setField('content_authority', $content_authority);
+  \Drupal::logger('ucb_trust_schema')->debug('Content authority set via resource object alter to: @value', ['@value' => $content_authority]);
+}
+
+/**
+ * Implements hook_jsonapi_resource_object_filter_access().
+ */
+function ucb_trust_schema_jsonapi_resource_object_filter_access($resource_object, \Drupal\Core\Session\AccountInterface $account) {
+  // Check if this is a trust_metadata entity and has content_authority field
+  if ($resource_object->getResourceType()->getEntityTypeId() === 'trust_metadata') {
+    $data = $resource_object->toArray();
+    if (isset($data['attributes']['content_authority'])) {
+      $data['attributes']['content_authority'] = \Drupal::service('ucb_trust_schema.jsonapi')->getContentAuthority();
+      \Drupal::logger('ucb_trust_schema')->debug('Content authority set in resource object to: @value', ['@value' => $data['attributes']['content_authority']]);
+    }
+  }
 }
 
 /**
@@ -215,6 +249,16 @@ function ucb_trust_schema_jsonapi_trust_metadata_filter_access(\Drupal\Core\Enti
     'filter_among_enabled' => \Drupal\Core\Access\AccessResult::allowed(),
     'filter_among_published' => \Drupal\Core\Access\AccessResult::allowed(),
   ];
+}
+
+/**
+ * Get site name from system configuration.
+ *
+ * @return string
+ *   The site name from system.site configuration.
+ */
+function ucb_trust_schema_get_site_name() {
+  return \Drupal::config('system.site')->get('name') ?? '';
 }
 
 /**

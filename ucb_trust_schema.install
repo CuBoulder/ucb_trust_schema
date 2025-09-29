@@ -159,8 +159,59 @@ function ucb_trust_schema_install() {
 }
 
 /**
- * Implements hook_uninstall().
+ * Add content_authority column to trust_metadata table.
  */
-function ucb_trust_schema_uninstall() {
-  // No longer need to drop the custom table as we're using entities
+function ucb_trust_schema_update_8003() {
+  $schema = Database::getConnection()->schema();
+  
+  if (!$schema->fieldExists('trust_metadata', 'content_authority')) {
+    $field_spec = [
+      'type' => 'varchar',
+      'length' => 255,
+      'not null' => FALSE,
+      'description' => 'The content authority from site affiliation.',
+    ];
+    
+    $schema->addField('trust_metadata', 'content_authority', $field_spec);
+    
+    // Add index with proper specification
+    $index_spec = [
+      'fields' => ['content_authority' => $field_spec],
+    ];
+    $schema->addIndex('trust_metadata', 'content_authority', ['content_authority'], $index_spec);
+  }
+}
+
+/**
+ * Remove content_authority column and make it a computed field.
+ */
+function ucb_trust_schema_update_8004() {
+  $schema = Database::getConnection()->schema();
+
+  if ($schema->fieldExists('trust_metadata', 'content_authority')) {
+    // Drop the index first
+    if ($schema->indexExists('trust_metadata', 'content_authority')) {
+      $schema->dropIndex('trust_metadata', 'content_authority');
+    }
+
+    // Drop the column
+    $schema->dropField('trust_metadata', 'content_authority');
+  }
+}
+
+/**
+ * Remove site_affiliation column since we now use site_name directly.
+ */
+function ucb_trust_schema_update_8005() {
+  $schema = Database::getConnection()->schema();
+
+  if ($schema->fieldExists('trust_metadata', 'site_affiliation')) {
+    // Drop the index first
+    if ($schema->indexExists('trust_metadata', 'site_affiliation')) {
+      $schema->dropIndex('trust_metadata', 'site_affiliation');
+    }
+
+    // Drop the column
+    $schema->dropField('trust_metadata', 'site_affiliation');
+  }
 }
