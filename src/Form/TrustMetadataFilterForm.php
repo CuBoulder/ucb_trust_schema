@@ -47,6 +47,38 @@ class TrustMetadataFilterForm extends FormBase {
       '#default_value' => $query['trust_scope'] ?? '',
     ];
 
+    $form['type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Type'),
+      '#options' => [
+        '' => $this->t('- Any -'),
+        'advising_session' => $this->t('Advising session'),
+        'brown_bag' => $this->t('Brown Bag'),
+        'colloquium_seminar' => $this->t('Colloquium/Seminar'),
+        'commencement' => $this->t('Commencement'),
+        'community_engagement' => $this->t('Community Engagement'),
+        'competition' => $this->t('Competition'),
+        'concert_show' => $this->t('Concert/Show'),
+        'dates_deadlines' => $this->t('Dates/Deadlines'),
+        'exhibit' => $this->t('Exhibit'),
+        'featured_event' => $this->t('Featured Event'),
+        'festival' => $this->t('Festival'),
+        'film' => $this->t('Film'),
+        'information_session' => $this->t('Information Session'),
+        'lecture_presentation' => $this->t('Lecture/Presentation'),
+        'live_streams' => $this->t('Live streams'),
+        'meeting_conference' => $this->t('Meeting/Conference'),
+        'outreach' => $this->t('Outreach'),
+        'social' => $this->t('Social'),
+        'sporting_event' => $this->t('Sporting Event'),
+        'student_club' => $this->t('Student Club'),
+        'tour' => $this->t('Tour'),
+        'virtual' => $this->t('Virtual'),
+        'workshop_training' => $this->t('Workshop/Training'),
+      ],
+      '#default_value' => $query['type'] ?? '',
+    ];
+
     $form['timeliness'] = [
       '#type' => 'select',
       '#title' => $this->t('Timeliness'),
@@ -121,6 +153,7 @@ class TrustMetadataFilterForm extends FormBase {
     foreach ([
       'trust_role',
       'trust_scope',
+      'type',
       'timeliness',
       'audience',
       'trust_topics',

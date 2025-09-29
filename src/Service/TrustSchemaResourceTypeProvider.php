@@ -82,6 +82,7 @@ class TrustSchemaResourceTypeProvider {
       $fields = [
         'trust_role',
         'trust_scope',
+        'type',
         'trust_contact',
         'timeliness',
         'audience',

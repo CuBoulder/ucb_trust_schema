@@ -77,7 +77,10 @@ function ucb_trust_schema_get_trust_metadata($nid) {
     return [
       'trust_role' => NULL,
       'trust_scope' => NULL,
+      'type' => NULL,
       'trust_contact' => NULL,
+      'timeliness' => NULL,
+      'audience' => NULL,
       'trust_topics' => [],
       'trust_syndication_enabled' => FALSE,
       'syndication_consumer_sites' => 0,
@@ -95,7 +98,10 @@ function ucb_trust_schema_get_trust_metadata($nid) {
   return [
     'trust_role' => $trust_metadata->get('trust_role')->value,
     'trust_scope' => $trust_metadata->get('trust_scope')->value,
+    'type' => $trust_metadata->get('type')->value,
     'trust_contact' => $trust_metadata->get('trust_contact')->value,
+    'timeliness' => $trust_metadata->get('timeliness')->value,
+    'audience' => $trust_metadata->get('audience')->value,
     'trust_topics' => $trust_topics,
     'trust_syndication_enabled' => $trust_metadata->get('trust_syndication_enabled')->value,
     'syndication_consumer_sites' => $trust_metadata->get('syndication_consumer_sites')->value ?? 0,

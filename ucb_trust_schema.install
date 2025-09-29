@@ -45,6 +45,12 @@ function ucb_trust_schema_schema() {
         'not null' => FALSE,
         'description' => 'The scope of the content.',
       ],
+      'type' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'description' => 'The type/subject of the content.',
+      ],
       'trust_contact' => [
         'type' => 'varchar',
         'length' => 255,
@@ -99,6 +105,7 @@ function ucb_trust_schema_schema() {
       'node_id' => ['node_id'],
       'trust_role' => ['trust_role'],
       'trust_scope' => ['trust_scope'],
+      'type' => ['type'],
       'timeliness' => ['timeliness'],
       'audience' => ['audience'],
       'trust_syndication_enabled' => ['trust_syndication_enabled'],
@@ -213,5 +220,29 @@ function ucb_trust_schema_update_8005() {
 
     // Drop the column
     $schema->dropField('trust_metadata', 'site_affiliation');
+  }
+}
+
+/**
+ * Add type column to trust_metadata table.
+ */
+function ucb_trust_schema_update_8006() {
+  $schema = Database::getConnection()->schema();
+  
+  if (!$schema->fieldExists('trust_metadata', 'type')) {
+    $field_spec = [
+      'type' => 'varchar',
+      'length' => 255,
+      'not null' => FALSE,
+      'description' => 'The type/subject of the content.',
+    ];
+    
+    $schema->addField('trust_metadata', 'type', $field_spec);
+    
+    // Add index for the type field
+    $index_spec = [
+      'fields' => ['type' => $field_spec],
+    ];
+    $schema->addIndex('trust_metadata', 'type', ['type'], $index_spec);
   }
 }

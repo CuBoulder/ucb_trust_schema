@@ -71,11 +71,11 @@ The response will include trust metadata in this format:
 For more detailed access to trust metadata with related node and taxonomy information, use the following JSON:API endpoint:
 
 ```
-/jsonapi/trust_metadata/trust_metadata?fields[trust_metadata--trust_metadata]=trust_role,trust_scope,trust_contact,trust_topics,node_id,syndication_consumer_sites,syndication_total_views,syndication_consumer_sites_list&fields[taxonomy_term--trust_topic]=name&fields[node--article]=title,body,path,created,changed&include=trust_topics,node_id
+/jsonapi/trust_metadata/trust_metadata?fields[trust_metadata--trust_metadata]=trust_role,trust_scope,type,trust_contact,timeliness,audience,trust_topics,node_id,syndication_consumer_sites,syndication_total_views,syndication_consumer_sites_list&fields[taxonomy_term--trust_topic]=name&fields[node--article]=title,body,path,created,changed&include=trust_topics,node_id
 ```
 
 This endpoint returns:
-- Trust metadata fields (trust_role, trust_scope, trust_contact, trust_topics)
+- Trust metadata fields (trust_role, trust_scope, type, trust_contact, timeliness, audience, trust_topics)
 - Related node information (title, body, path, created, changed)
 - Trust topic names
 - All relationships between these entities

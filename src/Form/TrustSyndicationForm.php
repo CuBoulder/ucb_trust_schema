@@ -29,6 +29,7 @@ class TrustSyndicationForm extends FormBase {
     $trust_metadata = ucb_trust_schema_get_trust_metadata($node->id()) ?: [
       'trust_role' => '',
       'trust_scope' => '',
+      'type' => '',
       'trust_contact' => '',
       'timeliness' => '',
       'audience' => '',
@@ -59,6 +60,39 @@ class TrustSyndicationForm extends FormBase {
         'campus_wide' => $this->t('Campus-wide'),
       ],
       '#default_value' => $trust_metadata['trust_scope'],
+    ];
+
+    $form['type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Type'),
+      '#required' => FALSE,
+      '#options' => [
+        '' => $this->t('- Select -'),
+        'advising_session' => $this->t('Advising session'),
+        'brown_bag' => $this->t('Brown Bag'),
+        'colloquium_seminar' => $this->t('Colloquium/Seminar'),
+        'commencement' => $this->t('Commencement'),
+        'community_engagement' => $this->t('Community Engagement'),
+        'competition' => $this->t('Competition'),
+        'concert_show' => $this->t('Concert/Show'),
+        'dates_deadlines' => $this->t('Dates/Deadlines'),
+        'exhibit' => $this->t('Exhibit'),
+        'featured_event' => $this->t('Featured Event'),
+        'festival' => $this->t('Festival'),
+        'film' => $this->t('Film'),
+        'information_session' => $this->t('Information Session'),
+        'lecture_presentation' => $this->t('Lecture/Presentation'),
+        'live_streams' => $this->t('Live streams'),
+        'meeting_conference' => $this->t('Meeting/Conference'),
+        'outreach' => $this->t('Outreach'),
+        'social' => $this->t('Social'),
+        'sporting_event' => $this->t('Sporting Event'),
+        'student_club' => $this->t('Student Club'),
+        'tour' => $this->t('Tour'),
+        'virtual' => $this->t('Virtual'),
+        'workshop_training' => $this->t('Workshop/Training'),
+      ],
+      '#default_value' => $trust_metadata['type'],
     ];
 
     $form['trust_contact'] = [
@@ -136,6 +170,7 @@ class TrustSyndicationForm extends FormBase {
     $trust_metadata = [
       'trust_role' => $form_state->getValue('trust_role'),
       'trust_scope' => $form_state->getValue('trust_scope'),
+      'type' => $form_state->getValue('type'),
       'trust_contact' => $form_state->getValue('trust_contact'),
       'timeliness' => $form_state->getValue('timeliness'),
       'audience' => $form_state->getValue('audience'),
