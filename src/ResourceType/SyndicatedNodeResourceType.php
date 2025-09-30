@@ -27,6 +27,7 @@ class SyndicatedNodeResourceType extends ResourceType {
     $trust_fields = [
       'trust_role',
       'trust_scope',
+      'type',
       'trust_contact',
       'timeliness',
       'audience',
