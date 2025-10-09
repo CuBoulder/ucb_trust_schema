@@ -54,9 +54,26 @@ class TrustSchemaAnalyticsController extends ControllerBase {
    */
   public function reportView(NodeInterface $node, Request $request) {
     // Get consumer site from request headers or query parameters
+    // Consumer sites should explicitly identify themselves with their full site path
+    // e.g., "colorado.edu/biden" or "colorado.edu/trust/discovery"
     $consumer_site = $request->headers->get('X-Consumer-Site') 
-      ?? $request->query->get('consumer_site')
-      ?? $request->getClientIp();
+      ?? $request->query->get('consumer_site');
+
+    // Fallback: Extract domain from Referer header (without path guessing)
+    if (empty($consumer_site)) {
+      $referer = $request->headers->get('Referer');
+      if ($referer) {
+        $parsed = parse_url($referer);
+        if (!empty($parsed['host'])) {
+          $consumer_site = $parsed['host'];
+        }
+      }
+    }
+
+    // Final fallback: Use IP address
+    if (empty($consumer_site)) {
+      $consumer_site = $request->getClientIp();
+    }
 
     // Basic validation
     if (empty($consumer_site)) {
