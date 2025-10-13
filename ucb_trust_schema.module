@@ -303,4 +303,24 @@ function ucb_trust_schema_cron() {
       }
     }
   }
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function ucb_trust_schema_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  // Alter trust metadata forms to set the size of the trust_topics multiselect.
+  if ($form_id === 'trust_metadata_default_form' || $form_id === 'trust_metadata_edit_form' || $form_id === 'trust_metadata_add_form') {
+    if (isset($form['trust_topics'])) {
+      // Set size attribute on the select element
+      $form['trust_topics']['widget']['#size'] = 15;
+      $form['trust_topics']['widget']['#attributes']['size'] = 15;
+      
+      // If it's a direct select element (not wrapped)
+      if (isset($form['trust_topics']['#type']) && $form['trust_topics']['#type'] === 'select') {
+        $form['trust_topics']['#size'] = 15;
+        $form['trust_topics']['#attributes']['size'] = 15;
+      }
+    }
+  }
 } 
