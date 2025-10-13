@@ -21,7 +21,18 @@ class TrustMetadataFilterForm extends FormBase {
     $request = \Drupal::request();
     $query = $request->query->all();
 
-    $form['trust_role'] = [
+    // Add wrapper for better layout
+    $form['#attributes']['class'][] = 'trust-metadata-filter-form';
+    $form['#attached']['library'][] = 'ucb_trust_schema/filter_form';
+
+    // First row of filters
+    $form['row1'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['filter-row']],
+      '#tree' => FALSE,
+    ];
+
+    $form['row1']['trust_role'] = [
       '#type' => 'select',
       '#title' => $this->t('Trust Role'),
       '#options' => [
@@ -32,9 +43,11 @@ class TrustMetadataFilterForm extends FormBase {
         'unverified' => $this->t('Unverified'),
       ],
       '#default_value' => $query['trust_role'] ?? '',
+      '#attributes' => ['class' => ['filter-field']],
+      '#parents' => ['trust_role'],
     ];
 
-    $form['trust_scope'] = [
+    $form['row1']['trust_scope'] = [
       '#type' => 'select',
       '#title' => $this->t('Trust Scope'),
       '#options' => [
@@ -45,41 +58,11 @@ class TrustMetadataFilterForm extends FormBase {
         'campus_wide' => $this->t('Campus-wide'),
       ],
       '#default_value' => $query['trust_scope'] ?? '',
+      '#attributes' => ['class' => ['filter-field']],
+      '#parents' => ['trust_scope'],
     ];
 
-    $form['type'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Type'),
-      '#options' => [
-        '' => $this->t('- Any -'),
-        'advising_session' => $this->t('Advising session'),
-        'brown_bag' => $this->t('Brown Bag'),
-        'colloquium_seminar' => $this->t('Colloquium/Seminar'),
-        'commencement' => $this->t('Commencement'),
-        'community_engagement' => $this->t('Community Engagement'),
-        'competition' => $this->t('Competition'),
-        'concert_show' => $this->t('Concert/Show'),
-        'dates_deadlines' => $this->t('Dates/Deadlines'),
-        'exhibit' => $this->t('Exhibit'),
-        'featured_event' => $this->t('Featured Event'),
-        'festival' => $this->t('Festival'),
-        'film' => $this->t('Film'),
-        'information_session' => $this->t('Information Session'),
-        'lecture_presentation' => $this->t('Lecture/Presentation'),
-        'live_streams' => $this->t('Live streams'),
-        'meeting_conference' => $this->t('Meeting/Conference'),
-        'outreach' => $this->t('Outreach'),
-        'social' => $this->t('Social'),
-        'sporting_event' => $this->t('Sporting Event'),
-        'student_club' => $this->t('Student Club'),
-        'tour' => $this->t('Tour'),
-        'virtual' => $this->t('Virtual'),
-        'workshop_training' => $this->t('Workshop/Training'),
-      ],
-      '#default_value' => $query['type'] ?? '',
-    ];
-
-    $form['timeliness'] = [
+    $form['row1']['timeliness'] = [
       '#type' => 'select',
       '#title' => $this->t('Timeliness'),
       '#options' => [
@@ -91,9 +74,18 @@ class TrustMetadataFilterForm extends FormBase {
         'winter_semester' => $this->t('Winter Semester'),
       ],
       '#default_value' => $query['timeliness'] ?? '',
+      '#attributes' => ['class' => ['filter-field']],
+      '#parents' => ['timeliness'],
     ];
 
-    $form['audience'] = [
+    // Second row of filters
+    $form['row2'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['filter-row']],
+      '#tree' => FALSE,
+    ];
+
+    $form['row2']['audience'] = [
       '#type' => 'select',
       '#title' => $this->t('Audience'),
       '#options' => [
@@ -104,6 +96,8 @@ class TrustMetadataFilterForm extends FormBase {
         'alumni' => $this->t('Alumni'),
       ],
       '#default_value' => $query['audience'] ?? '',
+      '#attributes' => ['class' => ['filter-field']],
+      '#parents' => ['audience'],
     ];
 
     // Get all trust topics.
@@ -112,14 +106,16 @@ class TrustMetadataFilterForm extends FormBase {
     foreach ($terms as $term) {
       $topic_options[$term->tid] = $term->name;
     }
-    $form['trust_topics'] = [
+    $form['row2']['trust_topics'] = [
       '#type' => 'select',
       '#title' => $this->t('Subjects'),
       '#options' => $topic_options,
       '#default_value' => $query['trust_topics'] ?? '',
+      '#attributes' => ['class' => ['filter-field']],
+      '#parents' => ['trust_topics'],
     ];
 
-    $form['trust_syndication_enabled'] = [
+    $form['row2']['trust_syndication_enabled'] = [
       '#type' => 'select',
       '#title' => $this->t('Syndication Enabled'),
       '#options' => [
@@ -128,10 +124,13 @@ class TrustMetadataFilterForm extends FormBase {
         '0' => $this->t('No'),
       ],
       '#default_value' => $query['trust_syndication_enabled'] ?? '',
+      '#attributes' => ['class' => ['filter-field']],
+      '#parents' => ['trust_syndication_enabled'],
     ];
 
     $form['actions'] = [
       '#type' => 'actions',
+      '#attributes' => ['class' => ['filter-actions']],
     ];
     $form['actions']['submit'] = [
       '#type' => 'submit',
@@ -153,7 +152,6 @@ class TrustMetadataFilterForm extends FormBase {
     foreach ([
       'trust_role',
       'trust_scope',
-      'type',
       'timeliness',
       'audience',
       'trust_topics',

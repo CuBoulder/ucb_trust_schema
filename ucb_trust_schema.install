@@ -246,3 +246,35 @@ function ucb_trust_schema_update_8006() {
     $schema->addIndex('trust_metadata', 'type', ['type'], $index_spec);
   }
 }
+
+/**
+ * Update type field to be hidden and trust_topics to use multiselect.
+ */
+function ucb_trust_schema_update_8007() {
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  
+  // Update type field definition
+  $type_field_definition = $entity_definition_update_manager->getFieldStorageDefinition('type', 'trust_metadata');
+  if ($type_field_definition) {
+    $entity_definition_update_manager->updateFieldStorageDefinition($type_field_definition);
+  }
+  
+  // Update trust_topics field definition
+  $trust_topics_field_definition = $entity_definition_update_manager->getFieldStorageDefinition('trust_topics', 'trust_metadata');
+  if ($trust_topics_field_definition) {
+    $entity_definition_update_manager->updateFieldStorageDefinition($trust_topics_field_definition);
+  }
+  
+  // Hide analytics fields from forms (they're read-only and auto-updated)
+  foreach (['syndication_consumer_sites', 'syndication_total_views', 'syndication_consumer_sites_list'] as $field_name) {
+    $field_definition = $entity_definition_update_manager->getFieldStorageDefinition($field_name, 'trust_metadata');
+    if ($field_definition) {
+      $entity_definition_update_manager->updateFieldStorageDefinition($field_definition);
+    }
+  }
+  
+  // Clear entity field info cache
+  \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+  
+  return t('Updated type field (now hidden), trust_topics field (now uses multiselect), and analytics fields (hidden from forms).');
+}
