@@ -10,6 +10,7 @@
  * - trust_contact: The maintainer contact information.
  * - trust_topics: Array of trust topics.
  * - node_summary: The node's summary text.
+ * - node_abstract: The node's abstract text.
  * - attributes: HTML attributes for the container.
  */
 #}
@@ -21,5 +22,6 @@
     trust-contact="{{ trust_contact }}"
     trust-topics="{{ trust_topics|json_encode }}"
     node-summary="{{ node_summary }}"
+    node-abstract="{{ node_abstract }}"
   ></trust-syndication>
 </div> 

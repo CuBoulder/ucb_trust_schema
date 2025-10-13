@@ -224,6 +224,15 @@ class TrustSchemaController extends ControllerBase {
         }
       }
 
+      // Get the abstract
+      $abstract = '';
+      if ($node->hasField('field_abstract')) {
+        $abstract_field = $node->get('field_abstract')->first();
+        if ($abstract_field && !$abstract_field->isEmpty()) {
+          $abstract = $abstract_field->value;
+        }
+      }
+
       $trust_metadata = [
         'node_id' => $node->id(),
         'uuid' => $node->uuid(),
@@ -235,6 +244,7 @@ class TrustSchemaController extends ControllerBase {
         'trust_topics' => $term_names,
         'trust_syndication_enabled' => (bool) $record['trust_syndication_enabled'],
         'node_summary' => $summary,
+        'node_abstract' => $abstract,
       ];
 
       return new JsonResponse([
@@ -336,6 +346,15 @@ class TrustSchemaController extends ControllerBase {
         }
       }
 
+      // Get the abstract
+      $abstract = '';
+      if ($node->hasField('field_abstract')) {
+        $abstract_field = $node->get('field_abstract')->first();
+        if ($abstract_field && !$abstract_field->isEmpty()) {
+          $abstract = $abstract_field->value;
+        }
+      }
+
       // Load term names for the response
       $term_names = [];
       if (!empty($trust_topics)) {
@@ -359,6 +378,7 @@ class TrustSchemaController extends ControllerBase {
           'trust_topics' => $term_names,
           'trust_syndication_enabled' => (bool) $content['trust_syndication_enabled'],
           'node_summary' => $summary,
+          'node_abstract' => $abstract,
         ],
       ]);
     }

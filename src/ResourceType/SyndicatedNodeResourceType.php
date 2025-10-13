@@ -34,6 +34,7 @@ class SyndicatedNodeResourceType extends ResourceType {
       'trust_topics',
       'trust_syndication_enabled',
       'node_summary',
+      'node_abstract',
       'syndication_consumer_sites',
       'syndication_total_views',
       'syndication_consumer_sites_list',
