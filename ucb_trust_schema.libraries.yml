@@ -12,4 +12,10 @@ trust-metadata-modal:
   dependencies:
     - core/drupal
     - core/jquery
-    - core/dialog 
+    - core/dialog
+
+filter_form:
+  version: 1.x
+  css:
+    theme:
+      css/filter-form.css: {} 

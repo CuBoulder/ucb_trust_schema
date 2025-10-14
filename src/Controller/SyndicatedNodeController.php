@@ -201,6 +201,15 @@ class SyndicatedNodeController extends ControllerBase {
           }
         }
 
+        // Get the abstract
+        $abstract = '';
+        if ($node->hasField('field_abstract')) {
+          $abstract_field = $node->get('field_abstract')->first();
+          if ($abstract_field && !$abstract_field->isEmpty()) {
+            $abstract = $abstract_field->value;
+          }
+        }
+
         // Get trust topics
         $trust_topics = [];
         foreach ($trust_metadata->get('trust_topics') as $topic) {
@@ -232,6 +241,7 @@ class SyndicatedNodeController extends ControllerBase {
             'title' => $node->getTitle(),
             'url' => $url,
             'summary' => $summary,
+            'abstract' => $abstract,
             'trust_role' => $trust_metadata->get('trust_role')->value,
             'trust_scope' => $trust_metadata->get('trust_scope')->value,
             'type' => $trust_metadata->get('type')->value,

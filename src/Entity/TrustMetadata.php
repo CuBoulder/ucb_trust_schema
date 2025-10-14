@@ -108,33 +108,9 @@ class TrustMetadata extends ContentEntityBase implements ContentEntityInterface 
 
     $fields['type'] = BaseFieldDefinition::create('list_string')
       ->setLabel(t('Type'))
-      ->setDescription(t('The type/subject of the content'))
+      ->setDescription(t('The type/subject of the content (currently disabled)'))
       ->setSettings([
-        'allowed_values' => [
-          'advising_session' => t('Advising session'),
-          'brown_bag' => t('Brown Bag'),
-          'colloquium_seminar' => t('Colloquium/Seminar'),
-          'commencement' => t('Commencement'),
-          'community_engagement' => t('Community Engagement'),
-          'competition' => t('Competition'),
-          'concert_show' => t('Concert/Show'),
-          'dates_deadlines' => t('Dates/Deadlines'),
-          'exhibit' => t('Exhibit'),
-          'featured_event' => t('Featured Event'),
-          'festival' => t('Festival'),
-          'film' => t('Film'),
-          'information_session' => t('Information Session'),
-          'lecture_presentation' => t('Lecture/Presentation'),
-          'live_streams' => t('Live streams'),
-          'meeting_conference' => t('Meeting/Conference'),
-          'outreach' => t('Outreach'),
-          'social' => t('Social'),
-          'sporting_event' => t('Sporting Event'),
-          'student_club' => t('Student Club'),
-          'tour' => t('Tour'),
-          'virtual' => t('Virtual'),
-          'workshop_training' => t('Workshop/Training'),
-        ],
+        'allowed_values' => [],
       ])
       ->setDefaultValue('')
       ->setDisplayOptions('view', [
@@ -142,11 +118,7 @@ class TrustMetadata extends ContentEntityBase implements ContentEntityInterface 
         'type' => 'list_default',
         'weight' => -2.5,
       ])
-      ->setDisplayOptions('form', [
-        'type' => 'options_select',
-        'weight' => -2.5,
-      ])
-      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('form', FALSE)
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['trust_contact'] = BaseFieldDefinition::create('string')
@@ -220,6 +192,7 @@ class TrustMetadata extends ContentEntityBase implements ContentEntityInterface 
       ->setLabel(t('Subjects'))
       ->setDescription(t('The trust subject associated with this content.'))
       ->setSetting('target_type', 'taxonomy_term')
+      ->setSetting('handler_settings', ['target_bundles' => ['trust_topics' => 'trust_topics']])
       ->setCardinality(BaseFieldDefinition::CARDINALITY_UNLIMITED)
       ->setDisplayOptions('view', [
         'label' => 'above',
@@ -227,13 +200,11 @@ class TrustMetadata extends ContentEntityBase implements ContentEntityInterface 
         'weight' => -1,
       ])
       ->setDisplayOptions('form', [
-        'type' => 'entity_reference_autocomplete',
+        'type' => 'options_select',
         'weight' => -1,
         'settings' => [
-          'match_operator' => 'CONTAINS',
-          'size' => '60',
-          'autocomplete_type' => 'tags',
-          'placeholder' => '',
+          'multiple' => TRUE,
+          'size' => 15,
         ],
       ])
       ->setDisplayConfigurable('form', TRUE)
@@ -284,11 +255,7 @@ class TrustMetadata extends ContentEntityBase implements ContentEntityInterface 
         'type' => 'number_integer',
         'weight' => 1,
       ])
-      ->setDisplayOptions('form', [
-        'type' => 'number',
-        'weight' => 1,
-      ])
-      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('form', FALSE)
       ->setDisplayConfigurable('view', TRUE)
       ->setReadOnly(TRUE);
 
@@ -301,11 +268,7 @@ class TrustMetadata extends ContentEntityBase implements ContentEntityInterface 
         'type' => 'number_integer',
         'weight' => 2,
       ])
-      ->setDisplayOptions('form', [
-        'type' => 'number',
-        'weight' => 2,
-      ])
-      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('form', FALSE)
       ->setDisplayConfigurable('view', TRUE)
       ->setReadOnly(TRUE);
 
@@ -318,11 +281,7 @@ class TrustMetadata extends ContentEntityBase implements ContentEntityInterface 
         'type' => 'string',
         'weight' => 3,
       ])
-      ->setDisplayOptions('form', [
-        'type' => 'string_textarea',
-        'weight' => 3,
-      ])
-      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('form', FALSE)
       ->setDisplayConfigurable('view', TRUE)
       ->setReadOnly(TRUE);
 
