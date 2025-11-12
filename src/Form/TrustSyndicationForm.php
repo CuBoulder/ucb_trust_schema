@@ -22,7 +22,7 @@ class TrustSyndicationForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $node = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?NodeInterface $node = NULL) {
     $form_state->set('node', $node);
 
     // Get existing trust metadata or set defaults
