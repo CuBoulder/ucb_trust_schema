@@ -321,4 +321,25 @@ class TrustMetadata extends ContentEntityBase implements ContentEntityInterface 
     return \ucb_trust_schema_get_site_name();
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function label() {
+    // Since this entity doesn't have a label field, we'll use the node title
+    // if available, or provide a fallback.
+    $node = $this->get('node_id')->entity;
+    if ($node) {
+      $node_label = $node->label();
+      // Ensure we return a string, never null.
+      return $node_label ?? '';
+    }
+    // Fallback to entity ID if node is not available.
+    $id = $this->id();
+    if ($id) {
+      return $this->t('Trust Metadata #@id', ['@id' => $id]);
+    }
+    // Final fallback for new unsaved entities.
+    return $this->t('Trust Metadata');
+  }
+
 } 
