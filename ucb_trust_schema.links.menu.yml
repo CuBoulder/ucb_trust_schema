@@ -4,12 +4,3 @@ ucb_trust_schema.overview:
   parent: system.admin_content
   route_name: entity.trust_metadata.collection
   weight: 5
-
-ucb_trust_schema.settings:
-  title: 'Trust Schema'
-  description: 'Configure trust schema settings'
-  parent: system.admin_config_cu_boulder
-  route_name: ucb_trust_schema.settings
-  weight: 0 
-
- 
