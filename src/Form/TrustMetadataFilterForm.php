@@ -4,9 +4,27 @@ namespace Drupal\ucb_trust_schema\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\taxonomy\Entity\Term;
 
+/**
+ * Provides a filter form for the Trust Metadata admin listing.
+ */
 class TrustMetadataFilterForm extends FormBase {
+
+  /**
+   * Filter query parameter keys.
+   *
+   * @var string[]
+   */
+  protected const FILTER_KEYS = [
+    'title',
+    'trust_role',
+    'trust_scope',
+    'timeliness',
+    'audience',
+    'trust_topics',
+    'trust_syndication_enabled',
+  ];
+
   /**
    * {@inheritdoc}
    */
@@ -21,11 +39,26 @@ class TrustMetadataFilterForm extends FormBase {
     $request = \Drupal::request();
     $query = $request->query->all();
 
-    // Add wrapper for better layout
     $form['#attributes']['class'][] = 'trust-metadata-filter-form';
     $form['#attached']['library'][] = 'ucb_trust_schema/filter_form';
 
-    // First row of filters
+    $form['title_row'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['filter-row', 'filter-row-title']],
+      '#tree' => FALSE,
+    ];
+
+    $form['title_row']['title'] = [
+      '#type' => 'search',
+      '#title' => $this->t('Page title'),
+      '#default_value' => $query['title'] ?? '',
+      '#attributes' => ['class' => ['filter-field', 'filter-field-title']],
+      '#parents' => ['title'],
+      '#size' => 40,
+      '#maxlength' => 255,
+    ];
+
+    // First row of filters.
     $form['row1'] = [
       '#type' => 'container',
       '#attributes' => ['class' => ['filter-row']],
@@ -78,7 +111,7 @@ class TrustMetadataFilterForm extends FormBase {
       '#parents' => ['timeliness'],
     ];
 
-    // Second row of filters
+    // Second row of filters.
     $form['row2'] = [
       '#type' => 'container',
       '#attributes' => ['class' => ['filter-row']],
@@ -137,6 +170,14 @@ class TrustMetadataFilterForm extends FormBase {
       '#value' => $this->t('Filter'),
     ];
 
+    if ($this->hasActiveFilters($query)) {
+      $form['actions']['reset'] = [
+        '#type' => 'submit',
+        '#value' => $this->t('Reset'),
+        '#submit' => ['::resetForm'],
+      ];
+    }
+
     // Use GET method for filtering.
     $form['#method'] = 'get';
 
@@ -147,21 +188,53 @@ class TrustMetadataFilterForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    // Redirect to the same page with query parameters for filtering.
+    $params = $this->buildFilterQuery($form_state);
+    $form_state->setRedirect('<current>', [], ['query' => $params]);
+  }
+
+  /**
+   * Resets the filter selections.
+   */
+  public function resetForm(array &$form, FormStateInterface $form_state) {
+    $form_state->setRedirect('<current>');
+  }
+
+  /**
+   * Builds query parameters from active filter values.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   *
+   * @return array
+   *   Query parameters for the listing route.
+   */
+  protected function buildFilterQuery(FormStateInterface $form_state): array {
     $params = [];
-    foreach ([
-      'trust_role',
-      'trust_scope',
-      'timeliness',
-      'audience',
-      'trust_topics',
-      'trust_syndication_enabled',
-    ] as $key) {
+    foreach (self::FILTER_KEYS as $key) {
       $value = $form_state->getValue($key);
       if ($value !== '' && $value !== NULL) {
         $params[$key] = $value;
       }
     }
-    $form_state->setRedirect('<current>', [], ['query' => $params]);
+    return $params;
   }
-} 
+
+  /**
+   * Determines whether any filters are currently active.
+   *
+   * @param array $query
+   *   The current request query parameters.
+   *
+   * @return bool
+   *   TRUE if one or more filters are active.
+   */
+  protected function hasActiveFilters(array $query): bool {
+    foreach (self::FILTER_KEYS as $key) {
+      if (!empty($query[$key])) {
+        return TRUE;
+      }
+    }
+    return FALSE;
+  }
+
+}

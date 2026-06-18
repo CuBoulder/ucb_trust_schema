@@ -74,7 +74,13 @@ class TrustSchemaJsonApiService {
     // For trust_metadata entities, we can directly access the field values
     // since they're stored as entity fields
     if ($entity->hasField($field_name)) {
-      $field_value = $entity->get($field_name)->value;
+      $field = $entity->get($field_name);
+      if ($field->getFieldDefinition()->getFieldStorageDefinition()->getCardinality() !== 1) {
+        $field_value = array_column($field->getValue(), 'value');
+      }
+      else {
+        $field_value = $field->value;
+      }
     }
   }
 

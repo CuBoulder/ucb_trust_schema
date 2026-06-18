@@ -291,7 +291,7 @@ class TrustSyndicationController extends ControllerBase {
           'trust_role' => $trust_metadata['trust_role'] ?? '',
           'trust_scope' => $trust_metadata['trust_scope'] ?? '',
           'timeliness' => $trust_metadata['timeliness'] ?? '',
-          'audience' => $trust_metadata['audience'] ?? '',
+          'audience' => ucb_trust_schema_format_audience((array) ($trust_metadata['audience'] ?? [])),
           'trust_contact' => $trust_metadata['trust_contact'] ?? '',
           'syndication_status' => [
             'data' => [

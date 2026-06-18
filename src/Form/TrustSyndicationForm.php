@@ -32,7 +32,7 @@ class TrustSyndicationForm extends FormBase {
       'type' => '',
       'trust_contact' => '',
       'timeliness' => '',
-      'audience' => '',
+      'audience' => [],
       'trust_topics' => [],
       'trust_syndication_enabled' => FALSE,
     ];
@@ -122,8 +122,9 @@ class TrustSyndicationForm extends FormBase {
       '#type' => 'select',
       '#title' => $this->t('Audience'),
       '#required' => FALSE,
+      '#multiple' => TRUE,
+      '#size' => 5,
       '#options' => [
-        '' => $this->t('- Select -'),
         'students' => $this->t('Students'),
         'faculty' => $this->t('Faculty'),
         'staff' => $this->t('Staff'),
@@ -173,7 +174,7 @@ class TrustSyndicationForm extends FormBase {
       'type' => $form_state->getValue('type'),
       'trust_contact' => $form_state->getValue('trust_contact'),
       'timeliness' => $form_state->getValue('timeliness'),
-      'audience' => $form_state->getValue('audience'),
+      'audience' => array_values(array_filter($form_state->getValue('audience') ?? [])),
       'trust_syndication_enabled' => $form_state->getValue('trust_syndication_enabled'),
     ];
     

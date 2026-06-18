@@ -176,6 +176,7 @@ class TrustMetadata extends ContentEntityBase implements ContentEntityInterface 
           'alumni' => 'Alumni',
         ],
       ])
+      ->setCardinality(BaseFieldDefinition::CARDINALITY_UNLIMITED)
       ->setDisplayOptions('view', [
         'label' => 'above',
         'type' => 'list_default',
@@ -184,6 +185,10 @@ class TrustMetadata extends ContentEntityBase implements ContentEntityInterface 
       ->setDisplayOptions('form', [
         'type' => 'options_select',
         'weight' => -1.4,
+        'settings' => [
+          'multiple' => TRUE,
+          'size' => 5,
+        ],
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
