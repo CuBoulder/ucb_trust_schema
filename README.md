@@ -6,11 +6,14 @@ The Trust Schema Module enables individual Drupal sites to declare and expose tr
 
 - Trust metadata fields for content nodes:
   - Trust Role (e.g., primary source, secondary source)
-  - Trust Scope (e.g., department level, university level)
-  - Trust Contact (email for verification)
-  - Trust Topics (taxonomy terms categorizing the content)
-  - Trust Syndication Enabled (toggle for syndication)
+  - Trust Scope (e.g., department-level, campus-wide)
+  - Maintainer Contact (email for verification)
+  - Timeliness (e.g., evergreen, semester-specific)
+  - Audience (e.g., students, faculty, staff, alumni)
+  - Subjects (taxonomy terms categorizing the content)
+  - Trust Syndication Enabled (toggle for syndication to the discovery site)
 
+- Admin overview of all trust metadata and syndication analytics
 - JSON:API integration for exposing trust metadata
 - Custom form for managing trust metadata on nodes
 - Trust Topics taxonomy vocabulary for categorizing content
@@ -26,21 +29,36 @@ The Trust Schema Module enables individual Drupal sites to declare and expose tr
 
 ## Usage
 
-### Managing Trust Metadata
+### Viewing Trust Metadata
 
-1. Navigate to any content node
-2. Click the "Trust Syndication" tab
+Site editors can review all trust metadata from the Drupal admin without using the API.
+
+1. Log in to the site with an account that can manage trust metadata.
+2. In the admin toolbar, go to **Content**.
+3. Click the **Trust Metadata** tab (or go directly to `/admin/content/trust-metadata`).
+
+That page lists every piece of content that has trust metadata, including its role, scope, timeliness, audience, subjects, whether syndication is enabled, and how many consumer sites and views it has. Use the filters at the top to narrow the list (for example, only syndicated content, or only a specific subject).
+
+From the list you can open the related page or edit that item's trust metadata.
+
+### Managing Trust Metadata on a Page
+
+To add or update trust metadata for a single piece of content:
+
+1. Open the content you want to syndicate
+2. Click the **Trust Syndication** tab
 3. Fill in the trust metadata fields:
    - Select a Trust Role
    - Choose a Trust Scope
-   - Enter a Trust Contact email
-   - Select one or more Trust Topics
-   - Enable/disable syndication as needed
+   - Enter a Maintainer Contact email
+   - Choose Timeliness and Audience if applicable
+   - Select one or more Subjects
+   - Enable syndication when the content should be available to other sites
 4. Save the changes
 
 ### Accessing Trust Metadata via JSON:API
 
-Trust metadata is exposed through the JSON:API endpoints. 
+For developers: trust metadata is also exposed through JSON:API endpoints. 
 
 #### Basic Syndicated Nodes Endpoint
 
