@@ -80,7 +80,7 @@ function ucb_trust_schema_get_trust_metadata($nid) {
       'type' => NULL,
       'trust_contact' => NULL,
       'timeliness' => NULL,
-      'audience' => NULL,
+      'audience' => [],
       'trust_topics' => [],
       'trust_syndication_enabled' => FALSE,
       'syndication_consumer_sites' => 0,
@@ -101,7 +101,7 @@ function ucb_trust_schema_get_trust_metadata($nid) {
     'type' => $trust_metadata->get('type')->value,
     'trust_contact' => $trust_metadata->get('trust_contact')->value,
     'timeliness' => $trust_metadata->get('timeliness')->value,
-    'audience' => $trust_metadata->get('audience')->value,
+    'audience' => ucb_trust_schema_get_audience_values($trust_metadata),
     'trust_topics' => $trust_topics,
     'trust_syndication_enabled' => $trust_metadata->get('trust_syndication_enabled')->value,
     'syndication_consumer_sites' => $trust_metadata->get('syndication_consumer_sites')->value ?? 0,
@@ -142,8 +142,21 @@ function ucb_trust_schema_update_trust_metadata($nid, array $metadata) {
   if (isset($metadata['trust_scope'])) {
     $trust_metadata->set('trust_scope', $metadata['trust_scope']);
   }
+  if (isset($metadata['type'])) {
+    $trust_metadata->set('type', $metadata['type']);
+  }
   if (isset($metadata['trust_contact'])) {
     $trust_metadata->set('trust_contact', $metadata['trust_contact']);
+  }
+  if (isset($metadata['timeliness'])) {
+    $trust_metadata->set('timeliness', $metadata['timeliness']);
+  }
+  if (isset($metadata['audience'])) {
+    $audience = $metadata['audience'];
+    if (!is_array($audience)) {
+      $audience = ($audience === '' || $audience === NULL) ? [] : [$audience];
+    }
+    $trust_metadata->set('audience', array_values(array_filter($audience)));
   }
   if (isset($metadata['trust_topics'])) {
     $trust_metadata->set('trust_topics', $metadata['trust_topics']);
@@ -306,20 +319,68 @@ function ucb_trust_schema_cron() {
 }
 
 /**
+ * Gets audience values for a trust metadata entity.
+ *
+ * @param \Drupal\ucb_trust_schema\Entity\TrustMetadata $trust_metadata
+ *   The trust metadata entity.
+ *
+ * @return string[]
+ *   The selected audience machine names.
+ */
+function ucb_trust_schema_get_audience_values(TrustMetadata $trust_metadata) {
+  $values = [];
+  foreach ($trust_metadata->get('audience') as $item) {
+    if ($item->value) {
+      $values[] = $item->value;
+    }
+  }
+  return $values;
+}
+
+/**
+ * Formats audience values for display.
+ *
+ * @param string[] $audience_values
+ *   Audience machine names.
+ *
+ * @return string
+ *   A comma-separated list of audience labels.
+ */
+function ucb_trust_schema_format_audience(array $audience_values) {
+  $allowed_values = [
+    'students' => t('Students'),
+    'faculty' => t('Faculty'),
+    'staff' => t('Staff'),
+    'alumni' => t('Alumni'),
+  ];
+
+  $labels = [];
+  foreach ($audience_values as $value) {
+    $labels[] = $allowed_values[$value] ?? $value;
+  }
+
+  return implode(', ', $labels);
+}
+
+/**
  * Implements hook_form_alter().
  */
 function ucb_trust_schema_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
-  // Alter trust metadata forms to set the size of the trust_topics multiselect.
+  // Alter trust metadata forms to set the size of multiselect fields.
   if ($form_id === 'trust_metadata_default_form' || $form_id === 'trust_metadata_edit_form' || $form_id === 'trust_metadata_add_form') {
-    if (isset($form['trust_topics'])) {
-      // Set size attribute on the select element
-      $form['trust_topics']['widget']['#size'] = 15;
-      $form['trust_topics']['widget']['#attributes']['size'] = 15;
-      
-      // If it's a direct select element (not wrapped)
-      if (isset($form['trust_topics']['#type']) && $form['trust_topics']['#type'] === 'select') {
-        $form['trust_topics']['#size'] = 15;
-        $form['trust_topics']['#attributes']['size'] = 15;
+    foreach (['trust_topics' => 15, 'audience' => 5] as $field_name => $size) {
+      if (!isset($form[$field_name])) {
+        continue;
+      }
+
+      if (isset($form[$field_name]['widget'])) {
+        $form[$field_name]['widget']['#size'] = $size;
+        $form[$field_name]['widget']['#attributes']['size'] = $size;
+      }
+
+      if (isset($form[$field_name]['#type']) && $form[$field_name]['#type'] === 'select') {
+        $form[$field_name]['#size'] = $size;
+        $form[$field_name]['#attributes']['size'] = $size;
       }
     }
   }

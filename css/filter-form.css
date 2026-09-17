@@ -18,6 +18,15 @@
   margin-bottom: 1rem;
 }
 
+.trust-metadata-filter-form .filter-row-title {
+  grid-template-columns: 1fr;
+  margin-bottom: 1.5rem;
+}
+
+.trust-metadata-filter-form .filter-field-title {
+  max-width: 32rem;
+}
+
 .trust-metadata-filter-form .filter-row:last-of-type {
   margin-bottom: 1.5rem;
 }

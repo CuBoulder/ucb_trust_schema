@@ -63,12 +63,6 @@ function ucb_trust_schema_schema() {
         'not null' => FALSE,
         'description' => 'The timeliness of the content (evergreen, semester-specific, etc.).',
       ],
-      'audience' => [
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => FALSE,
-        'description' => 'The target audience for the content.',
-      ],
       'trust_syndication_enabled' => [
         'type' => 'int',
         'size' => 'tiny',
@@ -107,7 +101,6 @@ function ucb_trust_schema_schema() {
       'trust_scope' => ['trust_scope'],
       'type' => ['type'],
       'timeliness' => ['timeliness'],
-      'audience' => ['audience'],
       'trust_syndication_enabled' => ['trust_syndication_enabled'],
     ],
   ];
@@ -277,4 +270,63 @@ function ucb_trust_schema_update_8007() {
   \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
   
   return t('Updated type field (now hidden), trust_topics field (now uses multiselect), and analytics fields (hidden from forms).');
+}
+
+/**
+ * Change audience to a multi-value field and migrate existing data.
+ */
+function ucb_trust_schema_update_8008() {
+  $connection = Database::getConnection();
+  $schema = $connection->schema();
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  // Preserve existing single-value audience data before the schema changes.
+  $existing_audiences = [];
+  if ($schema->fieldExists('trust_metadata', 'audience')) {
+    $existing_audiences = $connection->select('trust_metadata', 'tm')
+      ->fields('tm', ['id', 'audience'])
+      ->condition('audience', '', '<>')
+      ->isNotNull('audience')
+      ->execute()
+      ->fetchAllAssoc('id');
+  }
+
+  $field_storage = $entity_definition_update_manager->getFieldStorageDefinition('audience', 'trust_metadata');
+  if ($field_storage) {
+    $field_storage->setCardinality(\Drupal\Core\Field\BaseFieldDefinition::CARDINALITY_UNLIMITED);
+    $entity_definition_update_manager->updateFieldStorageDefinition($field_storage);
+  }
+
+  if ($schema->tableExists('trust_metadata__audience') && !empty($existing_audiences)) {
+    foreach ($existing_audiences as $entity_id => $record) {
+      if (empty($record->audience)) {
+        continue;
+      }
+
+      $connection->insert('trust_metadata__audience')
+        ->fields([
+          'bundle' => 'trust_metadata',
+          'deleted' => 0,
+          'entity_id' => $entity_id,
+          'revision_id' => $entity_id,
+          'langcode' => 'und',
+          'delta' => 0,
+          'audience_value' => $record->audience,
+        ])
+        ->execute();
+    }
+  }
+
+  if ($schema->fieldExists('trust_metadata', 'audience')) {
+    if ($schema->indexExists('trust_metadata', 'audience')) {
+      $schema->dropIndex('trust_metadata', 'audience');
+    }
+    $schema->dropField('trust_metadata', 'audience');
+  }
+
+  \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+
+  return t('Updated audience to support multiple values and migrated @count existing records.', [
+    '@count' => count($existing_audiences),
+  ]);
 }

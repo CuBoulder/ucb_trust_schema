@@ -110,7 +110,7 @@ class TrustSyndicationOverviewController extends ControllerBase {
       if (!empty($filters['timeliness']) && $metadata['timeliness'] !== $filters['timeliness']) {
         continue;
       }
-      if (!empty($filters['audience']) && $metadata['audience'] !== $filters['audience']) {
+      if (!empty($filters['audience']) && !in_array($filters['audience'], (array) ($metadata['audience'] ?? []), TRUE)) {
         continue;
       }
       if (!empty($filters['trust_contact']) && stripos($metadata['trust_contact'], $filters['trust_contact']) === FALSE) {
@@ -156,8 +156,8 @@ class TrustSyndicationOverviewController extends ControllerBase {
           $value_b = $b['metadata']['timeliness'] ?? '';
           break;
         case 'audience':
-          $value_a = $a['metadata']['audience'] ?? '';
-          $value_b = $b['metadata']['audience'] ?? '';
+          $value_a = ucb_trust_schema_format_audience((array) ($a['metadata']['audience'] ?? []));
+          $value_b = ucb_trust_schema_format_audience((array) ($b['metadata']['audience'] ?? []));
           break;
         case 'trust_contact':
           $value_a = $a['metadata']['trust_contact'] ?? '';
@@ -212,7 +212,7 @@ class TrustSyndicationOverviewController extends ControllerBase {
         'data' => $metadata['timeliness'] ?? '',
       ];
       $row['audience'] = [
-        'data' => $metadata['audience'] ?? '',
+        'data' => ucb_trust_schema_format_audience((array) ($metadata['audience'] ?? [])),
       ];
       $row['trust_contact'] = [
         'data' => $metadata['trust_contact'] ?? '',
